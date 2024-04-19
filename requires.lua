@@ -20,6 +20,7 @@ local constants = {
 getgenv().requireScript = function(scriptName)
 	local formattedPath = string.gsub(scriptName, ' ', '-')
 
+	if shortenedScripts[scriptName] then formattedPath = shortenedScripts[scriptName] end
 	if isfile(constants.filepath.. formattedPath) then print(string.format('[requires] [requireScript] getting %s from client', scriptName)) return loadfile(constants.filepath.. formattedPath) end
 
 	local success, result
@@ -27,8 +28,6 @@ getgenv().requireScript = function(scriptName)
 		if result then return end
 		warn('[requires] [requireScript] this is taking longer than expected: '.. constants.timeout)
 	end)
-
-	if shortenedScripts[scriptName] then formattedPath = shortenedScripts[scriptName] end
 
 	success, result = pcall(function() return game:HttpGet(constants.githubPath.. formattedPath) end)
 
