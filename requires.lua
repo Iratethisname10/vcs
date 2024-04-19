@@ -13,7 +13,7 @@ local shortenedScripts = {
 local constants = {
 	timeout = 15,
 	githubPath = 'https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/',
-	filepath = 'unbounded yield v2',
+	filepath = 'Unbounded Yield V2',
 	errors = {'404: Not Found', '400: Invalid Request'}
 }
 
