@@ -22,39 +22,39 @@ getgenv().requireScript = function(scriptName)
 
 	if isfile(constants.filepath.. formattedPath) then print(string.format('[requires] [requireScript] getting %s from client', scriptName)) return loadfile(constants.filepath.. formattedPath) end
 
-	local suc, res
+	local success, result
 	task.delay(constants.timeout, function()
-		if res then return end
+		if result then return end
 		warn('[requires] [requireScript] this is taking longer than expected: '.. constants.timeout)
 	end)
 
 	if shortenedScripts[scriptName] then formattedPath = shortenedScripts[scriptName] end
 
-	suc, res = pcall(function() return game:HttpGet(constants.githubPath.. formattedPath) end)
+	success, result = pcall(function() return game:HttpGet(constants.githubPath.. formattedPath) end)
 
-	if not suc or table.find(constants.errors, res) then
-		return warn('[requires] unknowed path / path not available (yet) : '.. formattedPath.. ' : '.. res)
+	if not success or table.find(constants.errors, result) then
+		return warn('[requires] unknowed path / path not available (yet) : '.. formattedPath.. ' : '.. result)
 	end
 
-	return loadstring(game:HttpGet(res))()
+	return loadstring(result)()
 end
 
 getgenv().requireCustom = function(url)
 	local formattedPath = string.gsub(scriptName, ' ', '%20')
 
-	local suc, res
+	local success, result
 	task.delay(constants.timeout, function()
-		if res then return end
+		if result then return end
 		warn('[requires] [requireCustom] this is taking longer than expected: '.. constants.timeout)
 	end)
 
-	suc, res = pcall(function() return game:HttpGet(url) end)
+	success, result = pcall(function() return game:HttpGet(url) end)
 
-	if not suc or table.find(constants.errors, res) then
-		return warn('[requires] [requireCustom] unknowed path / path not available (yet) : '.. formattedPath.. ' : '.. res)
+	if not success or table.find(constants.errors, result) then
+		return warn('[requires] [requireCustom] unknowed path / path not available (yet) : '.. formattedPath.. ' : '.. result)
 	end
 
-	return loadstring(game:HttpGet(res))()
+	return loadstring(result)()
 end
 
 getgenv().crash = function()
