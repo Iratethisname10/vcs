@@ -13,7 +13,7 @@ local shortenedScripts = {
 local constants = {
 	timeout = 15,
 	githubPath = 'https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/',
-	filepath = 'Unbounded Yield V2',
+	filepath = 'Unbounded Yield V2/',
 	errors = {'404: Not Found', '400: Invalid Request'}
 }
 
@@ -21,7 +21,10 @@ getgenv().requireScript = function(scriptName)
 	local formattedPath = string.gsub(scriptName, ' ', '-')
 
 	if shortenedScripts[scriptName] then formattedPath = shortenedScripts[scriptName] end
-	if isfile(constants.filepath.. formattedPath) then print(string.format('[requires] [requireScript] getting %s from client', scriptName)) return loadfile(constants.filepath.. formattedPath) end
+	if isfile(constants.filepath.. formattedPath) then
+		print(string.format('[requires] [requireScript] getting %s from client', scriptName))
+		return loadstring(readfile(constants.filepath.. formattedPath))()
+	end
 
 	local success, result
 	task.delay(constants.timeout, function()
