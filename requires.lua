@@ -13,13 +13,14 @@ local shortenedScripts = {
 local constants = {
 	timeout = 15,
 	githubPath = 'https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/',
-	filepath = 'unbounded yield v2'
+	filepath = 'unbounded yield v2',
+	errors = {'404: Not Found', '400: Invalid Request'}
 }
 
 getgenv().requireScript = function(scriptName)
-	local formattedPath = string.gsub(scriptName, " ", "-")
+	local formattedPath = string.gsub(scriptName, ' ', '-')
 
-	if isfile(filepath.. formattedPath) then print(string.format('[requires] [requireScript] getting %s from client', scriptName)) return loadfile(filepath.. formattedPath) end
+	if isfile(constants.filepath.. formattedPath) then print(string.format('[requires] [requireScript] getting %s from client', scriptName)) return loadfile(constants.filepath.. formattedPath) end
 
 	local suc, res
 	task.delay(constants.timeout, function()
@@ -31,7 +32,7 @@ getgenv().requireScript = function(scriptName)
 
 	suc, res = pcall(function() return game:HttpGet(constants.githubPath.. formattedPath) end)
 
-	if not suc or res == "404: Not Found" then
+	if not suc or table.find(constants.errors, res) then
 		return warn('[requires] unknowed path / path not available (yet) : '.. formattedPath.. ' : '.. res)
 	end
 
@@ -39,7 +40,7 @@ getgenv().requireScript = function(scriptName)
 end
 
 getgenv().requireCustom = function(url)
-	local formattedPath = string.gsub(scriptName, " ", "%20")
+	local formattedPath = string.gsub(scriptName, ' ', '%20')
 
 	local suc, res
 	task.delay(constants.timeout, function()
@@ -49,7 +50,7 @@ getgenv().requireCustom = function(url)
 
 	suc, res = pcall(function() return game:HttpGet(url) end)
 
-	if not suc or res == "404: Not Found" then
+	if not suc or table.find(constants.errors, res) then
 		return warn('[requires] [requireCustom] unknowed path / path not available (yet) : '.. formattedPath.. ' : '.. res)
 	end
 
@@ -59,7 +60,7 @@ end
 getgenv().crash = function()
 	table.clear(getreg())
 
-	repeat game:GetObjects("f342qhy65") until false
+	repeat game:GetObjects('f342qhy65') until false
 end
 
 return {key = '08ac2582954713609cd682f4ee0aaf5568d107a1d3658e0d252b73d2b1dba511'}
