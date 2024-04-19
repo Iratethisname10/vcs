@@ -22,7 +22,11 @@ getgenv().requireScript = function(scriptName)
 
 	if shortenedScripts[scriptName] then formattedPath = shortenedScripts[scriptName] end
 	if isfile(constants.filepath.. formattedPath) then
-		print(string.format('[requires] [requireScript] getting %s from client', scriptName))
+		print(string.format('[requires] [requireScript] getting %s from client', formattedPath))
+
+		if string.reverse(string.reverse(formattedPath):sub(1, 5)) == '.json' then
+			return readfile(constants.filepath.. formattedPath)
+		end
 		return loadstring(readfile(constants.filepath.. formattedPath))()
 	end
 
