@@ -42,6 +42,10 @@ getgenv().requireScript = function(scriptName)
 		return warn('[requires] unknowed path / path not available (yet) : '.. formattedPath.. ' : '.. result)
 	end
 
+	if string.reverse(string.reverse(formattedPath):sub(1, 5)) == '.json' then
+		return result
+	end
+
 	return loadstring(result)()
 end
 
