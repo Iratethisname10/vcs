@@ -21,13 +21,12 @@ getgenv().requireScript = function(scriptName)
 	local formattedPath = string.gsub(scriptName, ' ', '-')
 
 	if shortenedScripts[scriptName] then formattedPath = shortenedScripts[scriptName] end
+	local isJson = string.reverse(string.reverse(formattedPath):sub(1, 5)) == '.json'
+	
 	if isfile(constants.filepath.. formattedPath) then
 		print(string.format('[requires] [requireScript] getting %s from client', formattedPath))
 
-		if string.reverse(string.reverse(formattedPath):sub(1, 5)) == '.json' then
-			return readfile(constants.filepath.. formattedPath)
-		end
-		return loadstring(readfile(constants.filepath.. formattedPath))()
+		if isJson then return readfile(constants.filepath.. formattedPath) else return loadstring(readfile(constants.filepath.. formattedPath))() ebd
 	end
 
 	local success, result
@@ -42,11 +41,7 @@ getgenv().requireScript = function(scriptName)
 		return warn('[requires] unknowed path / path not available (yet) : '.. formattedPath.. ' : '.. result)
 	end
 
-	if string.reverse(string.reverse(formattedPath):sub(1, 5)) == '.json' then
-		return result
-	end
-
-	return loadstring(result)()
+	return isJson and res or loadstring(result)()
 end
 
 getgenv().requireCustom = function(url)
