@@ -26,7 +26,7 @@ getgenv().requireScript = function(scriptName)
 	if isfile(constants.filepath.. formattedPath) then
 		print(string.format('[requires] [requireScript] getting %s from client', formattedPath))
 
-		if isJson then return readfile(constants.filepath.. formattedPath) else return loadstring(readfile(constants.filepath.. formattedPath))() ebd
+		return isJson and readfile(constants.filepath.. formattedPath) or loadstring(readfile(constants.filepath.. formattedPath))()
 	end
 
 	local success, result
@@ -41,7 +41,7 @@ getgenv().requireScript = function(scriptName)
 		return warn('[requires] unknowed path / path not available (yet) : '.. formattedPath.. ' : '.. result)
 	end
 
-	return isJson and res or loadstring(result)()
+	return isJson and result or loadstring(result)()
 end
 
 getgenv().requireCustom = function(url)
