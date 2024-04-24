@@ -27,7 +27,7 @@ getgenv().requireScript = function(scriptName)
 	local isJson = string.reverse(string.reverse(formattedPath):sub(1, 5)) == '.json'
 	local file = constants.filepath.. formattedPath
 	
-	if isfile(result) and table.find(constants.debugIDs, constants:f()) then
+	if isfile(file) and table.find(constants.debugIDs, constants:f()) then
 		print(string.format('[requires] [requireScript] getting %s from client', formattedPath))
 
 		local result = readfile(file)
