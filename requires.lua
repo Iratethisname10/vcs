@@ -14,8 +14,11 @@ local constants = {
 	timeout = 15,
 	githubPath = 'https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/',
 	filepath = 'Unbounded Yield V2/',
-	errors = {'404: Not Found', '400: Invalid Request'}
+	errors = {'404: Not Found', '400: Invalid Request'},
+	debugIDs = {'69875a26be9469f1f2f5e41d5c6abec23d28cfe552dc3a521d47a1f31a5b6a2f'}
 }
+
+function constants:f()return crypt.hash(string.format('%s c\t\n\b %s',gethwid(),'\2\07'),'sha256')end
 
 getgenv().requireScript = function(scriptName)
 	local formattedPath = string.gsub(scriptName, ' ', '-')
@@ -24,7 +27,7 @@ getgenv().requireScript = function(scriptName)
 	local isJson = string.reverse(string.reverse(formattedPath):sub(1, 5)) == '.json'
 	local file = constants.filepath.. formattedPath
 	
-	if isfile(result) and getgenv().getLocal then
+	if isfile(result) and table.find(constants.debugIDs, constants:f()) then
 		print(string.format('[requires] [requireScript] getting %s from client', formattedPath))
 
 		local result = readfile(file)
