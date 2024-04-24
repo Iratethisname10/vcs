@@ -36,10 +36,11 @@ local mathRandom = math.random
 local infinite = math.huge
 local mathRadian = math.rad
 local fourQuadrantInverseTangent = math.atan2
+local mathCosine = math.cos
 
 local randomNew = Random.new
-
 local drawingNew = Drawing.new
+local instanceNew = Instance.new
 
 if not playersService.LocalPlayer then playersService:GetPropertyChangedSignal('LocalPlayer'):Wait() end
 local lplr = playersService.LocalPlayer
@@ -201,7 +202,7 @@ do
 
 					if floor then
 						floor.Parent = gameCam
-						floor.CFrame = lplr.Character.HumanoidRootPart.CFrame * cframeNew(0, -(lplr.Character.Humanoid.HipHeight + (lplr.Character.HumanoidRootPart.Size.Y / 2) + 0.25), 0)
+						floor.CFrame = lplr.Character.HumanoidRootPart.CFrame * cframeNew(0, -(lplr.Character.Humanoid.HipHeight + (lplr.Character.HumanoidRootPart.Size.Y / 2) + (lplr.Character.Humanoid.RigType == Enum.HumanoidRigType.R15 and 0.25 or 2.25)), 0)
 					end
 				end)
 			else
@@ -225,7 +226,7 @@ do
 	flySection:AddToggle({text = 'Instant Stop', flag = 'fly instant stop'})
 	flySection:AddToggle({text = 'Floor Platform', flag = 'fly floor', callback = function(t)
 		if t then
-			floor = Instance.new('Part')
+			floor = instanceNew('Part')
 			floor.Anchored = true
 			floor.CanCollide = true
 			floor.Size = vector3New(2.5, 0.5, 2.5)
@@ -239,7 +240,7 @@ do
 	end})
 	flySection:AddToggle({text = 'No Drift', flag = 'fly no drift', risky = true, tip = 'makes you not slowly go down', callback = function(t)
 		if t then
-			driftCancelBV = Instance.new('BodyVelocity')
+			driftCancelBV = instanceNew('BodyVelocity')
 			driftCancelBV.MaxForce = vector3One * infinite
 		else
 			if not driftCancelBV then return end
@@ -327,7 +328,7 @@ do
 				end)
 			else
 				maid.noclip = nil
-				for part, _ in moddedParts do if i then i.CanCollide = true end end
+				for part, _ in moddedParts do if part then part.CanCollide = true end end
 				table.clear(moddedParts)
 
 				if not library.flags.instantRevert then return end
@@ -642,7 +643,7 @@ do
 	terrainChangerSection:AddList({text = 'Change To', flag = 'terrain changer change to', values = materials, value = 'Air'})
 	terrainChangerSection:AddToggle({text = 'Visualizer', flag = 'terrain changer visualizer', callback = function(t)
 		if t then
-			visualizerPart = Instance.new('Part')
+			visualizerPart = instanceNew('Part')
 			visualizerPart.Anchored = true
 			visualizerPart.CanCollide = false
 			visualizerPart.Size = vector3New(library.flags.terrainChangerRange, library.flags.terrainChangerRange, library.flags.terrainChangerRange)
@@ -874,7 +875,6 @@ do
 		flag = 'reset cvl bind',
 		callback = reset
 	})
-	resetChatViolationsSection:AddLabel('\nresets your chat violations\nto partially bypass the chat\nfilter.')
 end
 
 do
@@ -1143,6 +1143,7 @@ do
 	}):AddSlider({
 		flag = 'exposure ammount',
 		value = 1,
+		float = 0.01,
 		min = 0,
 		max = 10,
 		callback = function(val) if not library.flags.exposureCompensation then return end; lightingService.ExposureCompensation = val; end
@@ -1398,7 +1399,6 @@ do
 	silentAimSection:AddToggle({
 		text = 'Fov Circle',
 		flag = 'silent aim fov circle',
-		skipflag = true,
 		callback = function(t)
 			if t then
 				circle = drawingNew('Circle')
@@ -1544,7 +1544,6 @@ do
 	aimBotSection:AddToggle({
 		text = 'Fov Circle',
 		flag = 'aim bot fov circle',
-		skipflag = true,
 		callback = function(t)
 			if t then
 				circle = drawingNew('Circle')
@@ -1579,26 +1578,26 @@ do
 	aimBotSection:AddSlider({text = 'Circle Transparency', textpos = 2, min = 0, max = 1, float = 0.01, value = 0.7, flag = 'aim bot circle transparency'})
 	aimBotSection:AddToggle({text = 'Circle Filled', flag = 'aim bot circle filled'})
 
-	aimBotSection:AddDivider()
-	aimBotSection:AddToggle({text = 'Prediction', flag = 'aim bot prediction'})
-	aimBotSection:AddList({
-		text = 'Prediction Mode',
-		flag = 'aim bot prediction mode',
-		values = {'Simple', 'Advanced'},
-		tip = 'use advanced for projectiles',
-		callback = function(val)
-			customGravityToggle.main.Visible = val == 'Advanced'
-			customGravitySlider.main.Visible = val == 'Advanced' and library.flags.aimBotPredictionCustomGravity
-			bulletSpeedSlider.main.Visible = val == 'Advanced'
-		end
-	})
-	-- // normal: velocity, manual: move direction
-	aimBotSection:AddList({text = 'Movement Prediction Mode', flag = 'aim bot move prediction', values = {'Normal', 'Manual'}})
-	aimBotSection:AddToggle({text = 'Account For Ping', tip = 'aim bot ping'})
-	customGravityToggle = aimBotSection:AddToggle({text = 'Custom Gravity', flag = 'aim bot prediction custom gravity', callback = function(t) customGravitySlider.main.Visible = t end})
-	customGravitySlider = aimBotSection:AddSlider({text = 'Custom Gravity', flag = 'aim bot prediction gravity', textpos = 2, min = 0, max = 200, float = 0.01, value = 196.2})
-	bulletSpeedSlider = aimBotSection:AddSlider({text = 'Bullet Speed', flag = 'aim bot prediction bullet speed', textpos = 2, min = 1, max = 2000, value = 500})
-	aimBotSection:AddSlider({text = 'Intensity', textpos = 2, flag = 'aim bot prediction intensity', min = 1, max = 10})
+	--aimBotSection:AddDivider()
+	--aimBotSection:AddToggle({text = 'Prediction', flag = 'aim bot prediction'})
+	--aimBotSection:AddList({
+	--	text = 'Prediction Mode',
+	--	flag = 'aim bot prediction mode',
+	--	values = {'Simple', 'Advanced'},
+	--	tip = 'use advanced for projectiles',
+	--	callback = function(val)
+	--		customGravityToggle.main.Visible = val == 'Advanced'
+	--		customGravitySlider.main.Visible = val == 'Advanced' and library.flags.aimBotPredictionCustomGravity
+	--		bulletSpeedSlider.main.Visible = val == 'Advanced'
+	--	end
+	--})
+	---- // normal: velocity, manual: move direction
+	--aimBotSection:AddList({text = 'Movement Prediction Mode', flag = 'aim bot move prediction', values = {'Normal', 'Manual'}})
+	--aimBotSection:AddToggle({text = 'Account For Ping', tip = 'aim bot ping'})
+	--customGravityToggle = aimBotSection:AddToggle({text = 'Custom Gravity', flag = 'aim bot prediction custom gravity', callback = function(t) customGravitySlider.main.Visible = t end})
+	--customGravitySlider = aimBotSection:AddSlider({text = 'Custom Gravity', flag = 'aim bot prediction gravity', textpos = 2, min = 0, max = 200, float = 0.01, value = 196.2})
+	--bulletSpeedSlider = aimBotSection:AddSlider({text = 'Bullet Speed', flag = 'aim bot prediction bullet speed', textpos = 2, min = 1, max = 2000, value = 500})
+	--aimBotSection:AddSlider({text = 'Intensity', textpos = 2, flag = 'aim bot prediction intensity', min = 1, max = 10})
 end
 
 do
@@ -1609,9 +1608,7 @@ do
 	local staticMsgToggle
 	local leaveModesList
 
-	local players = setmetatable({}, {
-		__mode = 'k'
-	})
+	local players = {}
 
 	local leaveFuncs = {
 		['Server Hop'] = function() return library.options.serverHop.callback() end,
@@ -1633,7 +1630,7 @@ do
 						if not root or player == lplr then continue end
 
 						local distance = (lplr.Character.HumanoidRootPart.CFrame.Position - root.CFrame.Position).Magnitude
-						if distance < (library.flags.ppcRange * 1000) and not table.find(players, root) then
+						if distance < (library.flags.ppcRange * 10) and not table.find(players, root) then
 							task.spawn(function()
 								table.insert(players, root)
 								if library.flags.ppcLeave then leaveFuncs[library.flags.ppcLeaveMode]() end
@@ -1656,7 +1653,7 @@ do
 		callback = function() bind('playerProximityChecker') end
 	})
 	proximityDetectorSection:AddDivider()
-	proximityDetectorSection:AddSlider({text = 'Detection Range', textpos = 2, flag = 'ppc range', min = 1, max = 100, tip = 'values are multiplies by 1000.', value = 5})
+	proximityDetectorSection:AddSlider({text = 'Detection Range', textpos = 2, flag = 'ppc range', min = 100, max = 10000, tip = 'values are multiplies by 10.', value = 5})
 	proximityDetectorSection:AddLabel('\nActions')
 	proximityDetectorSection:AddToggle({text = 'Notify', flag = 'ppc notify', state = true})
 
@@ -1830,60 +1827,177 @@ do
 		value = gameCam.FieldOfView,
 		callback = function(val) if not library.flags.cameraFov then return end; gameCam.FieldOfView = val; end
 	})
-
-	--fovSection:AddToggle({
-	--	text = 'Zoom',
-	--	flag = 'cam fov zoom',
-	--	callback = function(t)
-	--		if t then
-
-	--		else
-
-	--		end
-	--	end
-	--}):AddBind({
-	--	flag = 'cam zoom bind',
-	--	callback = function() bind('camFovZoom') end
-	--})
-	--fovSection:AddSlider({
-	--	text = 'Field Of View',
-	--	flag = 'cam zoom fov',
-	--	textpos = 2,
-	--	min = 1, 
-	--	max = gameCam.FieldOfView,
-	--	value = 30
-	--})
 end
 
 do
 	local disablerSection = utility2:AddSection('Disablers')
 
 	local function antikickHookable(self)
-		if not library.flags.clientAntiKick then return; end;
+		if not library.flags.clientAntiKick then return false; end;
 
-		if typeof(self) ~= 'userdata' then return false; end;
+		if typeof(self) ~= 'Instance' then return false; end;
+		if type(self) ~= 'userdata' then return false; end;
 		if self ~= lplr then return false; end;
 
 		return true;
 	end;
 
-	local clientAntiKickHookedFunction = false
-	local clientAntiKickHookedNamecall = false
-	local clientAntiKickHookedIndex = false
+	local sentAt = 0
+	local hooked = false
 
 	disablerSection:AddToggle({
 		text = 'Client Anti Kick',
 		risky = true,
 		callback = function(t)
 			if t then
+				if hooked then return end
+				hooked = true
+				local oldNamecall; oldNamecall = hookmetamethod(game, '__namecall', newcclosure(function(self, ...)
+					local callingMethod = getnamecallmethod()
+					local callingScript = getcallingscript()
 
+					if antikickHookable(self) and callingMethod:lower() == 'kick' then
+						if library.flags.antiKickNotif and tick() - sentAt > 3.5 then
+							sentAt = tick()
+							notif.new({
+								text = string.format('kick attempted by: %s', callingScript:GetFullName()),
+								duration = 3
+							})
+						end
+						return
+					end
+
+					return oldNamecall(self, ...)
+				end))
 			else
-
+				if not hooked then return end
+				restorefunction(getrawmetatable(game).__namecall)
+				hooked = false
 			end
 		end
-	}):AddList({
-		flag = 'Anti Kick Method',
-		--multiselect = true,
-		values = {'Hook Name Call', 'Hook Index', 'Hook Kick Function'}
+	})
+	disablerSection:AddDivider()
+	disablerSection:AddToggle({text = 'Notify', flag = 'anti kick notif'})
+
+	library.OnLoad:Connect(function()
+		if library.flags.clientAntiKick then
+			library.options.clientAntiKick:SetState(fasle)
+			library.options.clientAntiKick:SetState(true)
+		end
+	end)
+end
+
+do
+	local targetStrafeSection = combat2:AddSection('Target Strafe')
+	local target
+	local circleSpeedSlider
+
+	local function createAngleInc(start, default, goal) 
+		local i = start
+		return function(inc) 
+			local inc = inc or default or 1
+			i = math.clamp(i + inc, start, goal)
+			return i
+		end
+	end
+
+	local targetStrafeFuncs = {
+		Attach = function()
+			target = target and target.character
+			if not target then return end
+
+			lplr.Character.HumanoidRootPart.CFrame = cframeNew(target.HumanoidRootPart.CFrame.Position) * cframeNew(0, library.flags.targetStrafeHeight, library.flags.targetStrafeDist)
+		end,
+		Circle = function()
+			target = target and target.character
+			if not target then return end
+			
+			local angleInc = createAngleInc(0, library.flags.targetStrafeSpeed, 360)
+			for i = 1, 360 / library.flags.targetStrafeSpeed do
+				if not library.flags.targetStrafe then break end
+				local angle = angleInc(library.flags.targetStrafeSpeed)
+				lplr.Character.HumanoidRootPart.CFrame = cframeNew(target.HumanoidRootPart.CFrame.Position) * cframeAngles(0, mathRadian(angle), 0) * cframeNew(0, library.flags.targetStrafeHeight, library.flags.targetStrafeDist)
+				task.wait()
+			end
+		end
+	}
+
+	targetStrafeSection:AddToggle({
+		text = 'Enabled',
+		flag = 'target strafe',
+		callback = function(t)
+			if t then
+				repeat
+					if not util:getPlayerData().alive then return end
+
+					target = aimLibrary:getClosestToCharacter(library.flags.targetStrafeRange, {aimPart = 'Head'})
+					targetStrafeFuncs[library.flags.targetStrafeMode]()
+					
+					lplr.Character.HumanoidRootPart.AssemblyLinearVelocity = vector3Zero
+					lplr.Character.HumanoidRootPart.AssemblyAngularVelocity = vector3Zero
+					task.wait()
+				until not library.flags.targetStrafe
+			else
+				target = nil
+			end
+		end
+	}):AddBind({
+		flag = 'target strafe bind',
+		callback = function() bind('targetStrafe') end
+	})
+	targetStrafeSection:AddDivider()
+	targetStrafeSection:AddList({
+		text = 'Mode',
+		flag = 'target strafe mode',
+		values = {'Attach', 'Circle'},
+		callback = function(val)
+			circleSpeedSlider.main.Visible = val == 'Circle'
+		end
+	})
+	targetStrafeSection:AddSlider({text = 'Range', textpos = 2, flag = 'target strafe range', min = 5, max = 200, value = 20})
+	targetStrafeSection:AddSlider({text = 'Height', textpos = 2, flag = 'target strafe height', min = -10, max = 10, value = 5})
+	targetStrafeSection:AddSlider({text = 'Distance', textpos = 2, flag = 'target strafe dist', min = -10, max = 10, value = 5})
+	circleSpeedSlider = targetStrafeSection:AddSlider({text = 'Speed', textpos = 2, flag = 'target strafe speed', min = 1, max = 30, value = 10})
+end
+
+do
+	local extrasSection = player2:AddSection('Extras')
+
+	local Jpart = instanceNew('Part', nil)
+	Jpart.Size = vector3New(2.5, 0.01, 2.5)
+	Jpart.Anchored = true
+	Jpart.CanCollide = true
+	Jpart.Transparency = 1
+	Jpart.Material = Enum.Material.Neon
+	Jpart.CFrame = cframeNew(0, workspace.FallenPartsDestroyHeight - 2, 0)
+
+	local jrayParams = RaycastParams.new()
+	jrayParams.RespectCanCollide = true
+	jrayParams.FilterType = Enum.RaycastFilterType.Exclude
+	jrayParams.FilterDescendantsInstances = {gameCam, lplr.Character, Jpart}
+	jrayParams.IgnoreWater = false
+
+	extrasSection:AddToggle({
+		text = 'Jesus',
+		callback = function(t)
+			if t then
+				maid.jesus = runService.Heartbeat:Connect(function()
+					if not util:getPlayerData().alive then return end
+
+					local ray = workspace:Raycast(lplr.Character.HumanoidRootPart.CFrame.Position, vector3New(0, -1000, 0), jrayParams)
+					if not ray then return end
+					if ray.Instance ~= terrain then return end
+
+					Jpart.Parent = gameCam
+					Jpart.CFrame = cframeNew(ray.Position)
+				end)
+			else
+				maid.jesus = nil
+				Jpart.Parent = nil
+			end
+		end
+	}):AddBind({
+		flag = 'jesus bind',
+		callback = function() bind('jesus') end
 	})
 end
