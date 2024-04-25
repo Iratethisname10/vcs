@@ -1,4 +1,4 @@
-local Utility = loadstring(game:HttpGet('https://raw.githubusercontent.com/Iratethisname10/Code/main/aztup-ui/util.lua'))();
+local Utility = requireScript('utils.lua');
 
 local cloneref = cloneref or function(instance) return instance; end;
 
@@ -35,16 +35,11 @@ local toggleBoxes;
 local toggleTracers;
 local unlockTracers;
 local showHealthBar;
-local proximityArrows;
-local maxProximityArrowDistance;
 local displayName;
 local displayDistance;
 local displayHealth;
 local useTeamColor;
 local useFloatHealth;
-
-local scalarPointAX, scalarPointAY;
-local scalarPointBX, scalarPointBY;
 
 local labelOffset, tracerOffset;
 local boxOffsetTopRight, boxOffsetBottomLeft;
@@ -52,26 +47,10 @@ local boxOffsetTopRight, boxOffsetBottomLeft;
 local healthBarOffsetTopRight, healthBarOffsetBottomLeft;
 local healthBarValueOffsetTopRight, healthBarValueOffsetBottomLeft;
 
-local realGetRPProperty;
-
-local scalarSize = 20;
-
-local getRPProperty = function(self, p, v)
-	return self[p];
-end;
-
-local setRP = function(self, p, v)
-	self[p] = v;
-end;
-
-local destroyRP = function(self)
-	return self:Destroy();
-end;
-
-realGetRPProperty = getRPProperty;
+local function set(self, p, v) self[p] = v; end;
+local function get(self, p) return self[p]; end;
 
 local ESP_HP_LOW, ESP_HP_HIGH = Color3.fromRGB(192, 57, 43), Color3.fromRGB(39, 174, 96)
-local TRIANGLE_ANGLE = mathRad(45);
 
 do
     EntityESP = {};
@@ -90,12 +69,6 @@ do
         self._id = EntityESP.id;
         self._player = player;
         self._playerName = player.Name;
-
-        self._triangle = Drawing.new('Triangle');
-        self._triangle.Visible = true;
-        self._triangle.Thickness = 0;
-        self._triangle.Color = Color3.fromRGB(255, 255, 255);
-        self._triangle.Filled = true;
 
         self._label = Drawing.new('Text');
         self._label.Visible = false;
@@ -146,28 +119,6 @@ do
     function EntityESP:ConvertVector(...)
         return vectorToWorldSpace(self._cameraCFrame, vector3New(...));
     end;
-
-    function EntityESP:GetOffsetTrianglePosition(closestPoint, radiusOfDegree)
-        local cosOfRadius, sinOfRadius = mathCos(radiusOfDegree), mathSin(radiusOfDegree);
-        local closestPointX, closestPointY = closestPoint.X, closestPoint.Y;
-
-        local sameBCCos = (closestPointX + scalarPointBX * cosOfRadius);
-        local sameBCSin = (closestPointY + scalarPointBX * sinOfRadius);
-
-        local sameACSin = (scalarPointAY * sinOfRadius);
-        local sameACCos = (scalarPointAY * cosOfRadius)
-
-        local pointX1 = (closestPointX + scalarPointAX * cosOfRadius) - sameACSin;
-        local pointY1 = closestPointY + (scalarPointAX * sinOfRadius) + sameACCos;
-
-        local pointX2 = sameBCCos - (scalarPointBY * sinOfRadius);
-        local pointY2 = sameBCSin + (scalarPointBY * cosOfRadius);
-
-        local pointX3 = sameBCCos - sameACSin;
-        local pointY3 = sameBCSin + sameACCos;
-
-        return Vector2New(mathFloor(pointX1), mathFloor(pointY1)), Vector2New(mathFloor(pointX2), mathFloor(pointY2)), Vector2New(mathFloor(pointX3), mathFloor(pointY3));
-    end;
  
     function EntityESP:Update(t)
         local camera = self._camera;
@@ -182,7 +133,6 @@ do
         local rootPartPosition = rootPart.Position;
 
         local labelPos, visibleOnScreen = worldToViewportPoint(camera, rootPartPosition + labelOffset);
-        local triangle = self._triangle;
 
         local isTeamMate = Utility:isTeamMate(self._player);
         if(isTeamMate and not showTeam) then return self:Hide() end;
@@ -193,29 +143,6 @@ do
         local espColor = useTeamColor and self._player.TeamColor.Color or isTeamMate and allyColor or enemyColor;
         local canView = false;
 
-        if (proximityArrows and not visibleOnScreen and distance < maxProximityArrowDistance) then
-            local vectorUnit;
-
-            if (labelPos.Z < 0) then
-                vectorUnit = -(Vector2.new(labelPos.X, labelPos.Y) - self._viewportSizeCenter).Unit; --PlayerPos-Center.Unit
-            else
-                vectorUnit = (Vector2.new(labelPos.X, labelPos.Y) - self._viewportSizeCenter).Unit; --PlayerPos-Center.Unit
-            end;
-
-            local degreeOfCorner = -mathAtan2(vectorUnit.X, vectorUnit.Y) - TRIANGLE_ANGLE;
-            local closestPointToPlayer = self._viewportSizeCenter + vectorUnit * scalarSize --screenCenter+unit*scalar (Vector 2)
-
-            local pointA, pointB, pointC = self:GetOffsetTrianglePosition(closestPointToPlayer, degreeOfCorner);
-
-            setRP(triangle, 'PointA', pointA);
-            setRP(triangle, 'PointB', pointB);
-            setRP(triangle, 'PointC', pointC);
-
-            setRP(triangle, 'Color', espColor);
-            canView = true;
-        end;
-
-        setRP(triangle, 'Visible', canView);
         if (not visibleOnScreen) then return self:Hide(true) end;
 
         self._visible = visibleOnScreen;
@@ -229,10 +156,10 @@ do
 
         local text = name.. distance.. health.. (pluginData.text or '');
 
-        setRP(label, 'Visible', visibleOnScreen);
-        setRP(label, 'Position', Vector2New(labelPos.X, labelPos.Y - realGetRPProperty(self._labelObject, 'TextBounds').Y));
-        setRP(label, 'Text', text);
-        setRP(label, 'Color', espColor);
+        set(label, 'Visible', visibleOnScreen);
+        set(label, 'Position', Vector2New(labelPos.X, labelPos.Y - get(self._labelObject, 'TextBounds').Y));
+        set(label, 'Text', text);
+        set(label, 'Color', espColor);
 
         if(toggleBoxes) then
             local boxTopRight = worldToViewportPoint(camera, rootPartPosition + boxOffsetTopRight);
@@ -241,27 +168,27 @@ do
             local topRightX, topRightY = boxTopRight.X, boxTopRight.Y;
             local bottomLeftX, bottomLeftY = boxBottomLeft.X, boxBottomLeft.Y;
 
-            setRP(box, 'Visible', visibleOnScreen);
+            set(box, 'Visible', visibleOnScreen);
 
-            setRP(box, 'PointA', Vector2New(topRightX, topRightY));
-            setRP(box, 'PointB', Vector2New(bottomLeftX, topRightY));
-            setRP(box, 'PointC', Vector2New(bottomLeftX, bottomLeftY));
-            setRP(box, 'PointD', Vector2New(topRightX, bottomLeftY));
-            setRP(box, 'Color', espColor);
+            set(box, 'PointA', Vector2New(topRightX, topRightY));
+            set(box, 'PointB', Vector2New(bottomLeftX, topRightY));
+            set(box, 'PointC', Vector2New(bottomLeftX, bottomLeftY));
+            set(box, 'PointD', Vector2New(topRightX, bottomLeftY));
+            set(box, 'Color', espColor);
         else
-            setRP(box, 'Visible', false);
+            set(box, 'Visible', false);
         end;
 
         if(toggleTracers) then
             local linePosition = worldToViewportPoint(camera, rootPartPosition + tracerOffset);
 
-            setRP(line, 'Visible', visibleOnScreen);
+            set(line, 'Visible', visibleOnScreen);
 
-            setRP(line, 'From', unlockTracers and getMouseLocation(UserInputService) or self._viewportSize);
-            setRP(line, 'To', Vector2New(linePosition.X, linePosition.Y));
-            setRP(line, 'Color', espColor);
+            set(line, 'From', unlockTracers and getMouseLocation(UserInputService) or self._viewportSize);
+            set(line, 'To', Vector2New(linePosition.X, linePosition.Y));
+            set(line, 'Color', espColor);
         else
-            setRP(line, 'Visible', false);
+            set(line, 'Visible', false);
         end;
 
         if(showHealthBar) then
@@ -279,71 +206,64 @@ do
             local healthBarValueTopRightX, healthBarValueTopRightY = healthBarValueTopRight.X, healthBarValueTopRight.Y;
             local healthBarValueBottomLeftX, healthBarValueBottomLeftY = healthBarValueBottomLeft.X, healthBarValueBottomLeft.Y;
 
-            setRP(healthBar, 'Visible', visibleOnScreen);
-            setRP(healthBar, 'Color', espColor);
+            set(healthBar, 'Visible', visibleOnScreen);
+            set(healthBar, 'Color', espColor);
 
-            setRP(healthBar, 'PointA', Vector2New(healthBarTopRightX, healthBarTopRightY));
-            setRP(healthBar, 'PointB', Vector2New(healthBarBottomLeftX, healthBarTopRightY));
-            setRP(healthBar, 'PointC', Vector2New(healthBarBottomLeftX, healthBarBottomLeftY));
-            setRP(healthBar, 'PointD', Vector2New(healthBarTopRightX, healthBarBottomLeftY));
+            set(healthBar, 'PointA', Vector2New(healthBarTopRightX, healthBarTopRightY));
+            set(healthBar, 'PointB', Vector2New(healthBarBottomLeftX, healthBarTopRightY));
+            set(healthBar, 'PointC', Vector2New(healthBarBottomLeftX, healthBarBottomLeftY));
+            set(healthBar, 'PointD', Vector2New(healthBarTopRightX, healthBarBottomLeftY));
 
-            setRP(healthBarValue, 'Visible', visibleOnScreen);
-            setRP(healthBarValue, 'Color', lerp(ESP_HP_LOW, ESP_HP_HIGH, floatHealth / 100));
+            set(healthBarValue, 'Visible', visibleOnScreen);
+            set(healthBarValue, 'Color', lerp(ESP_HP_LOW, ESP_HP_HIGH, floatHealth / 100));
 
-            setRP(healthBarValue, 'PointA', Vector2New(healthBarValueTopRightX, healthBarValueTopRightY));
-            setRP(healthBarValue, 'PointB', Vector2New(healthBarValueBottomLeftX, healthBarValueTopRightY));
-            setRP(healthBarValue, 'PointC', Vector2New(healthBarValueBottomLeftX, healthBarValueBottomLeftY));
-            setRP(healthBarValue, 'PointD', Vector2New(healthBarValueTopRightX, healthBarValueBottomLeftY));
+            set(healthBarValue, 'PointA', Vector2New(healthBarValueTopRightX, healthBarValueTopRightY));
+            set(healthBarValue, 'PointB', Vector2New(healthBarValueBottomLeftX, healthBarValueTopRightY));
+            set(healthBarValue, 'PointC', Vector2New(healthBarValueBottomLeftX, healthBarValueBottomLeftY));
+            set(healthBarValue, 'PointD', Vector2New(healthBarValueTopRightX, healthBarValueBottomLeftY));
         else
-            setRP(healthBar, 'Visible', false);
-            setRP(healthBarValue, 'Visible', false);
+            set(healthBar, 'Visible', false);
+            set(healthBarValue, 'Visible', false);
         end;
     end;
 
     function EntityESP:Destroy()
         if (not self._label) then return end;
 
-        destroyRP(self._label);
+        self._label:Destroy();
         self._label = nil;
 
-        destroyRP(self._box);
+        self._box:Destroy();
         self._box = nil;
 
-        destroyRP(self._line);
+        self._line:Destroy();
         self._line = nil;
 
-        destroyRP(self._healthBar);
+        self._healthBar:Destroy();
         self._healthBar = nil;
 
-        destroyRP(self._healthBarValue);
+        self._healthBarValue:Destroy();
         self._healthBarValue = nil;
-
-        destroyRP(self._triangle);
-        self._triangle = nil;
     end;
 
-    function EntityESP:Hide(bypassTriangle)
-        if (not bypassTriangle) then
-            setRP(self._triangle, 'Visible', false);
-        end;
-
+    function EntityESP:Hide()
         if (not self._visible) then return end;
         self._visible = false;
 
-        setRP(self._label, 'Visible', false);
-        setRP(self._box, 'Visible', false);
-        setRP(self._line, 'Visible', false);
+        set(self._label, 'Visible', false);
+        set(self._box, 'Visible', false);
+        set(self._line, 'Visible', false);
 
-        setRP(self._healthBar, 'Visible', false);
-        setRP(self._healthBarValue, 'Visible', false);
+        set(self._healthBar, 'Visible', false);
+        set(self._healthBarValue, 'Visible', false);
     end;
 
     function EntityESP:SetFont(font)
-        setRP(self._label, 'Font', font);
+        set(self._label, 'Font', font);
     end;
 
     function EntityESP:SetTextSize(textSize)
-        setRP(self._label, 'Size', textSize);
+        set(self._label, 'Size', textSize);
     end;
 
     local function updateESP()
@@ -367,21 +287,13 @@ do
         toggleTracers = flags.renderTracers;
         unlockTracers = flags.unlockTracers;
         showHealthBar = flags.renderHealthBar;
-        maxProximityArrowDistance = flags.maxProximityArrowDistance;
-        proximityArrows = flags.proximityArrows;
 		displayName = flags.displayName;
 		displayDistance = flags.displayDistance;
 		displayHealth = flags.displayHealth;
 		useTeamColor = flags.useTeamColor;
 		useFloatHealth = flags.useFloatHealth
 
-		ESP_HP_LOW = flags.healthBarLow;
-		ESP_HP_HIGH = flags.healthBarHigh;
-
-        scalarSize = library.flags.proximityArrowsSize or 20;
-
-        scalarPointAX, scalarPointAY = scalarSize, scalarSize;
-        scalarPointBX, scalarPointBY = -scalarSize, -scalarSize;
+		ESP_HP_LOW, ESP_HP_HIGH = flags.healthBarLow, flags.healthBarHigh;
 
         labelOffset = EntityESP:ConvertVector(0, 3.25, 0);
         tracerOffset = EntityESP:ConvertVector(0, -4.5, 0);
