@@ -63,6 +63,14 @@ local espLibrary = requireScript('utils/helpers/esp.lua')
 local aimLibrary = requireScript('utils/helpers/aim.lua')
 local predictionUtils = requireScript('utils/helpers/prediction.lua')
 
+local debug = library.flags.debugMode
+library.OnFlagChanged:Connect(function(data)
+	local option = library.options[data.flag]
+
+	if option.flag ~= 'debugMode' then return end 
+	debug = library.flags[option.flag]
+end)
+
 local function bind(flag) return library.options[flag]:SetState(not library.flags[flag]) end
 
 do
@@ -1933,8 +1941,10 @@ do
 					target = aimLibrary:getClosestToCharacter(library.flags.targetStrafeRange, {aimPart = 'Head'})
 					targetStrafeFuncs[library.flags.targetStrafeMode]()
 					
-					lplr.Character.HumanoidRootPart.AssemblyLinearVelocity = vector3Zero
-					lplr.Character.HumanoidRootPart.AssemblyAngularVelocity = vector3Zero
+					if target then
+						lplr.Character.HumanoidRootPart.AssemblyLinearVelocity = vector3Zero
+						lplr.Character.HumanoidRootPart.AssemblyAngularVelocity = vector3Zero
+					end
 					task.wait()
 				until not library.flags.targetStrafe
 			else
@@ -1974,7 +1984,7 @@ do
 	local jrayParams = RaycastParams.new()
 	jrayParams.RespectCanCollide = true
 	jrayParams.FilterType = Enum.RaycastFilterType.Exclude
-	jrayParams.FilterDescendantsInstances = {gameCam, lplr.Character, Jpart}
+	jrayParams.FilterDescendantsInstances = {gameCam, lplr.Character}
 	jrayParams.IgnoreWater = false
 
 	extrasSection:AddToggle({
@@ -1990,14 +2000,77 @@ do
 
 					Jpart.Parent = gameCam
 					Jpart.CFrame = cframeNew(ray.Position)
+					Jpart.Transparency = debug and 0 or 1
 				end)
 			else
 				maid.jesus = nil
 				Jpart.Parent = nil
+				Jpart.CFrame = cframeNew(0, workspace.FallenPartsDestroyHeight - 2, 0)
 			end
 		end
 	}):AddBind({
 		flag = 'jesus bind',
 		callback = function() bind('jesus') end
+	})
+end
+
+do
+	local triggerBotSection = combat1:AddSection('Trigger Bot')
+
+	local ball = instanceNew('Part', nil)
+	ball.Shape = Enum.PartType.Ball
+	ball.Size = vector3One * 0.7
+	ball.Anchored = true
+	ball.CanCollide = false
+	ball.Transparency = 1
+	ball.Color = Color3.fromRGB(180, 0, 255)
+	ball.Material = Enum.Material.Neon
+	ball.CFrame	= cframeNew(0, workspace.FallenPartsDestroyHeight - 2, 0)
+
+	local rayParams = RaycastParams.new()
+	rayParams.FilterType = Enum.RaycastFilterType.Exclude
+	rayParams.FilterDescendantsInstances = {gameCam, lplr.Character}
+	rayParams.IgnoreWater = true
+
+	triggerBotSection:AddToggle({
+		text = 'Enabled',
+		flag = 'trigger bot',
+		callback = function(t)
+			if t then
+				maid.triggerBot = runService.RenderStepped:Connect(function()
+					local ray = workspace:Raycast(gameCam.CFrame.Position, (library.flags.triggerBotAimMode == 'Camera' and gameCam.CFrame.lookVector or mouse.UnitRay.Direction) * 15000, rayParams)
+					local position = ray and ray.Position or vector3New(0, workspace.FallenPartsDestroyHeight - 2, 0)
+					local instance = ray and ray.Instance
+					
+					if not instance then return end
+
+					for _, player in playersService:GetPlayers() do
+						if not player or not player.Character then continue end
+
+						if instance:IsDescendantOf(player.Character) then
+							mouse1click()
+						end
+					end
+
+					ball.Parent = gameCam
+					ball.CFrame = cframeNew(position)
+					ball.Transparency = debug and 0.5 or 1
+					task.wait()
+				end)
+			else
+				maid.triggerBot = nil
+				ball.Parent = nil
+				ball.CFrame	= cframeNew(0, workspace.FallenPartsDestroyHeight - 2, 0)
+			end
+		end
+	}):AddBind({
+		flag = 'trigger bot bind',
+		callback = function() bind('triggerBot') end
+	})
+	triggerBotSection:AddDivider()
+	triggerBotSection:AddList({
+		text = 'Aim Mode',
+		values = {'Mouse', 'Camera'},
+		flag = 'trigger bot aim mode'
 	})
 end
