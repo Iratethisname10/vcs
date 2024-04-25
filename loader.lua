@@ -1,6 +1,7 @@
 local cloneref = cloneref or function(instance) return instance end
 
 local httpService = cloneref(game:GetService('HttpService'))
+local playersService = cloneref(game:GetService('Players'))
 
 do -- getting required functions
 	local key = '08ac2582954713609cd682f4ee0aaf5568d107a1d3658e0d252b73d2b1dba511'
@@ -36,12 +37,14 @@ do -- getting required functions
 	until requestData
 
 	gottenKey = requestData.key
-	print(string.format('needed key: %s', key))
-	print(string.format('gotten key: %s', gottenKey))
+	print(string.format('[loader] needed key: %s', key))
+	print(string.format('[loader] gotten key: %s', gottenKey))
 
 	if gottenKey ~= key then return warn('[loader] script could not load: invalid key') end
 	if string.find(gottenKey, 'failed') then return warn(string.format('[loader] script could not load: %s', gottenKey)) end
 end
+
+repeat task.wait() until game:IsLoaded()
 
 local library = requireScript('library.lua')
 
@@ -61,6 +64,12 @@ do -- game scan & setup
 	end
 end
 
--- add queue on telpeort
+local teleported = false
+library.unloadMaid:GiveTask(playersService.LocalPlayer.OnTeleport:Connect(function(state)
+	if teleported or state ~= Enum.TeleportState.InProgress then return end
+	teleported = true
+
+	queue_on_teleport(`loadstring(game:HttpGet('https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/loader.lua'))()`)
+end))
 
 library:Init()
