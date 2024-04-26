@@ -1225,6 +1225,7 @@ do
 	})
 end
 
+--[[
 do
 	local silentAimSection = combat2:AddSection('Silent Aim')
 	local isHooked = false
@@ -1233,23 +1234,12 @@ do
 	local circle
 
 	local actualCallingMethods = {
-		['Redirect'] = 'FindPartOnRayWithIgnoreList',
-		['Find On Ray'] = 'FindPartOnRay',
-		['Find On Ray IgnoreList'] = 'FindPartOnRayWithIgnoreList',
-		['Find On Ray Whitelist'] = 'FindPartOnRayWithWhitelist',
+		['FindPartOnRay'] = 'FindPartOnRayWithIgnoreList',
+		['FindPartOnRayWithIgnoreList'] = 'FindPartOnRayWithIgnoreList',
+		['FindPartOnRayWithWhitelist'] = 'FindPartOnRayWithIgnoreList',
 		['Raycast'] = 'Raycast',
-		['Screen To Ray'] = 'ScreenPointToRay',
-		['Viewport To Ray'] = 'ViewportPointToRay'
-	}
-
-	local callingMethods = {
-		['Redirect'] = 'FindPartOnRayWithIgnoreList',
-		['Find On Ray'] = 'FindPartOnRayWithIgnoreList',
-		['Find On Ray IgnoreList'] = 'FindPartOnRayWithIgnoreList',
-		['Find On Ray Whitelist'] = 'FindPartOnRayWithIgnoreList',
-		['Raycast'] = 'Raycast',
-		['Screen To Ray'] = 'ScreenPointToRay',
-		['Viewport To Ray'] = 'ScreenPointToRay'
+		['ScreenPointToRay'] = 'ScreenPointToRay',
+		['ViewportPointToRay'] = 'ScreenPointToRay'
 	}
 
 	local silentAimFuncs = {
@@ -1282,7 +1272,7 @@ do
 			if mathFloor(randomNew().NextNumber(randomNew(), 0, 1) * 100) > library.flags.silentAimHitChance then return end
 
 			local origin = args[1]
-			local player = library.flags.silentAimSelectionMethod == 'Mouse' and aimLibrary:getClosestToMouse(library.flags.silentAimFOV, {
+			local player; player = library.flags.silentAimSelectionMethod == 'Mouse' and aimLibrary:getClosestToMouse(library.flags.silentAimFOV, {
 				aimPart = targetpart,
 				wallCheck = library.flags.silentAimWallCheck,
 				teamCheck = library.flags.silentAimTeamCheck,
@@ -1295,8 +1285,10 @@ do
 				sheildCheck = library.flags.silentAimSheildCheck,
 				aliveCheck = library.flags.silentAimAliveCheck
 			})
-			targetpart = player and player.character[targetpart]
-			local direction = cframeLookAt(origin, targetPart.CFrame.Position)
+			targetpart = player and player.character:FindFirstChild(targetpart)
+			if not targetpart then return end
+
+			local direction = CFrame.lookAt(origin, targetpart.Position)
 			
 			args[2] = direction.lookVector * args[2].Magnitude
 			return
@@ -1339,19 +1331,18 @@ do
 				local oldNamecall; oldNamecall = hookmetamethod(game, '__namecall', function(self, ...)
 					if not library.flags.silentAim then return oldNamecall(self, ...) end
 					if not util:getPlayerData().alive then return oldNamecall(self, ...) end
+
 					if checkcaller() then return oldNamecall(self, ...) end
-					
-					local callingMethod = getnamecallmethod()
-					local callingScript = getcallingscript()
 
-					if callingMethod ~= actualCallingMethods[library.flags.silentAimMethod] then return oldNamecall(self, ...) end
-					if table.find(blacklistedScripts, tostring(callingScript)) then return oldNamecall(self, ...) end
+					if getnamecallmethod() ~= library.flags.silentAimMethod then return oldNamecall(self, ...) end
+					if table.find(blacklistedScripts, tostring(getcallingscript())) then return oldNamecall(self, ...) end
 
-					local variadicArgs = {...}
-					local hookedResult = silentAimFuncs[callingMethods[library.flags.silentAimMethod]](variadicArgs)
+					local args = {...}
+					print(actualCallingMethods[library.flags.silentAimMethod])
+					local hookedResult = silentAimFuncs[library.flags.silentAimMethod](args)
 					if hookedResult then return unpack(hookedResult) end
 
-					return oldNamecall(self, unpack(variadicArgs))
+					return oldNamecall(self, unpack(args))
 				end)
 				maid.silentAimCircle = runService.RenderStepped:Connect(function()
 					if not circle or not circleOutline then return end
@@ -1392,7 +1383,7 @@ do
 	silentAimSection:AddList({
 		text = 'Method',
 		flag = 'silent aim method',
-		values = {'Redirect', 'Find On Ray', 'Find On Ray IgnoreList', 'Find On Ray Whitelist', 'Raycast', 'Screen To Ray', 'Viewport To Ray'}
+		values = {'Raycast', 'FindPartOnRayWithIgnoreList', 'FindPartOnRayWithWhitelist', 'FindPartOnRay', 'ScreenPointToRay', 'ViewportPointToRay'}
 	})
 	silentAimSection:AddList({text = 'Selection Method', flag = 'silent aim selection method', values = {'Mouse', 'Character'}})
 	silentAimSection:AddSlider({text = 'Hit Chance', textpos = 2, flag = 'silent aim hit chance', value = 70, min = 0, max = 100, float = 0.1})
@@ -1441,7 +1432,7 @@ do
 	silentAimSection:AddSlider({text = 'Circle Transparency', textpos = 2, min = 0, max = 1, float = 0.01, value = 0.7, flag = 'silent aim circle transparency'})
 	silentAimSection:AddToggle({text = 'Circle Filled', flag = 'silent aim circle filled'})
 end
-
+]]
 do
 	local aimBotSection = combat1:AddSection('Aim Bot')
 	local circleOutline
@@ -1554,7 +1545,7 @@ do
 		flag = 'aim bot fov circle',
 		callback = function(t)
 			if t then
-				circle = drawingNew('Circle')
+				circle = circle or drawingNew('Circle')
 				circle.Color = library.flags.aimBotCircleColor
 				circle.Filled = library.flags.aimBotCircleFilled
 				circle.NumSides = library.flags.aimBotCircleSides
@@ -1565,7 +1556,7 @@ do
 				circle.ZIndex = 2
 				circle.Position = userInputService:GetMouseLocation() 
 
-				circleOutline = drawingNew('Circle')
+				circleOutline = circleOutline or drawingNew('Circle')
 				circleOutline.Color = Color3.fromRGB(0, 0, 0)
 				circleOutline.Filled = false
 				circleOutline.NumSides = library.flags.aimBotCircleSides
@@ -2030,7 +2021,6 @@ do
 	local rayParams = RaycastParams.new()
 	rayParams.FilterType = Enum.RaycastFilterType.Exclude
 	rayParams.FilterDescendantsInstances = {gameCam, lplr.Character}
-	rayParams.IgnoreWater = true
 
 	triggerBotSection:AddToggle({
 		text = 'Enabled',
