@@ -1,7 +1,5 @@
 local libraryLoadAt = tick();
--- TODO: fix multiselect breaking
 
-local KeyBindVisualizer = requireScript('bind-viewer.lua');
 local ToastNotif = requireScript('notifs.lua');
 local Maid = requireScript('maid.lua');
 local Signal = requireScript('signal.lua');
@@ -24,7 +22,6 @@ local GuiService = cloneref(game:GetService('GuiService'));
 local TeleportService = cloneref(game:GetService('TeleportService'));
 
 local LocalPlayer = Players.LocalPlayer;
-local visualizer;
 
 if getgenv().library then
 	getgenv().library:Unload();
@@ -35,8 +32,12 @@ if (not isfile('Unbounded Yield V2/configs')) then
 end;
 
 if (not isfile('Unbounded Yield V2/configs/globalConf.bin')) then
-    -- By default global config is turned on
+    -- // By default global config is turned on
     writefile('Unbounded Yield V2/configs/globalConf.bin', 'true');
+end;
+
+if (not isfolder('Unbounded Yield V2/bypasses')) then
+	makefolder('Unbounded Yield V2/bypasses');
 end;
 
 local globalConfFilePath = 'Unbounded Yield V2/configs/globalConf.bin';
@@ -47,7 +48,7 @@ local library = {
 	tabs = {},
 	draggable = true,
 	flags = {},
-	title = string.format('Unbounded Yield V2'),
+	title = 'Unbounded Yield V2',
 	open = false,
 	popup = nil,
 	instances = {},
@@ -74,9 +75,7 @@ do -- // Load
         end;
     end));
 
-    -- if(debugMode) then
-        getgenv().library = library
-    -- end;
+    getgenv().library = library
 
     library.OnLoad = Signal.new();
     library.OnKeyPress = Signal.new();
@@ -84,14 +83,11 @@ do -- // Load
 
     library.OnFlagChanged = Signal.new();
 
-    KeyBindVisualizer.init(library);
-
     library.unloadMaid:GiveTask(library.OnLoad);
     library.unloadMaid:GiveTask(library.OnKeyPress);
     library.unloadMaid:GiveTask(library.OnKeyRelease);
     library.unloadMaid:GiveTask(library.OnFlagChanged);
 
-    visualizer = KeyBindVisualizer.new();
     local mouseMovement = Enum.UserInputType.MouseMovement;
 
     --Locals
@@ -213,12 +209,12 @@ do -- // Load
         return connection
     end
 
+	local dontToggle = {'saveconfigauto', 'bypassAdonis', 'spoofMemory', 'debug'}
     function library:Unload()
         task.wait();
-        visualizer:Remove();
 
         for _, o in next, self.options do
-            if o.type == 'toggle' and not string.find(string.lower(o.flag), 'panic') and o.flag ~= 'saveconfigauto' then
+            if o.type == 'toggle' and not string.find(string.lower(o.flag), 'panic') and not table.find(dontToggle, o.flag) then
                 pcall(o.SetState, o, false);
             end;
         end;
@@ -633,9 +629,9 @@ do -- // Load
             library.OnFlagChanged:Fire(self);
         end
 
-        task.defer(function()
-            option:SetState(option.state);
-        end);
+        --task.defer(function()
+        --    option:SetState(option.state);
+        --end);
 
         setmetatable(option, {__newindex = function(t, i, v)
             if i == 'Text' then
@@ -939,17 +935,7 @@ do -- // Load
             if self.keys[1] == 'Backspace' or #self.keys == 0 then
                 self.key = 'none'
                 bindinput.Text = '[NONE]'
-
-                if (#self.keys ~= 0) then
-                    visualizer:RemoveText(self.text);
-                end;
             else
-                if (self.parentFlag and self.key ~= 'none') then
-                    if (library.flags[self.parentFlag]) then
-                        visualizer:AddText(self.text);
-                    end;
-                end;
-
                 local formattedKey = formatKeys(self.keys);
                 bindinput.Text = '[' .. table.concat(formattedKey, '+') .. ']';
                 self.key = table.concat(formattedKey, '+');
@@ -3295,13 +3281,19 @@ do -- // Load
             ));
         end;
 
+		local function toggleDetectionBypass(name, toggle)
+			--ToastNotif.new({text = 'Changes will apply when you re-execute the script', duration = 10});
+
+			writefile(string.format('Unbounded Yield V2/bypasses/%s.bin', name), tostring(toggle));
+		end;
+
 		local joinDiscord;
 
 		do
 			function joinDiscord(code)
                 for i = 6463, 6472 do -- // Just cause there is a 10 range port
                     if(pcall(function()
-                        syn.request({
+                        request({
                             Url = ('http://127.0.0.1:%s/rpc?v=1'):format(i),
                             Method = 'POST',
                             Headers = {
@@ -3331,8 +3323,9 @@ do -- // Load
         local configSection = settingsColumn1:AddSection('Configs');
         local extraSection = settingsColumn1:AddSection('Extra');
 		local discordSection = settingsColumn:AddSection('Discord');
-        local BackgroundArray = {};
+		local detectionSection = settingsColumn:AddSection('Detection Protection');
 
+        local BackgroundArray = {};
         local Backgrounds = {
             Floral  = 5553946656,
             Flowers = 6071575925,
@@ -3371,39 +3364,32 @@ do -- // Load
                 library:Unload()
             end
         });
-
         settingsMain:AddBind({
             text = 'Unload Key',
             nomouse = true,
             callback = library.options.unloadMenu.callback
         });
-
-        -- settingsMain:AddToggle({
-        --     text = 'Remote Control'
-        -- });
-
         settingsMenu:AddBind({
             text = 'Open / Close',
             flag = 'UI Toggle',
             nomouse = true,
             key = Enum.KeyCode.RightControl,
-            callback = function() library:Close() end
-        })
-
+            callback = function() library:Close(); end;
+        });
         settingsMenu:AddColor({
             text = 'Accent Color',
             flag = 'Menu Accent Color',
             color = Color3.fromRGB(225, 141, 255),
             callback = function(Color)
                 if library.currentTab then
-                    library.currentTab.button.TextColor3 = Color
-                end
+                    library.currentTab.button.TextColor3 = Color;
+                end;
 
                 for _, obj in next, library.theme do
-                    obj[(obj.ClassName == 'TextLabel' and 'TextColor3') or (obj.ClassName == 'ImageLabel' and 'ImageColor3') or 'BackgroundColor3'] = Color
-                end
-            end
-        })
+                    obj[(obj.ClassName == 'TextLabel' and 'TextColor3') or (obj.ClassName == 'ImageLabel' and 'ImageColor3') or 'BackgroundColor3'] = Color;
+                end;
+            end;
+        });
         settingsMenu:AddToggle({
             text = 'Rainbow Accent Color',
             flag = 'Rainbow Menu Accent Color',
@@ -3420,65 +3406,35 @@ do -- // Load
                 end);
             end
         })
-
-        settingsMenu:AddToggle({
-            text = 'Keybind Visualizer',
-            state = false,
-            callback = function(state)
-                return visualizer:SetEnabled(state);
-            end
-        }):AddColor({
-            text = 'Keybind Visualizer Color',
-            callback = function(color)
-                return visualizer:UpdateColor(color);
-            end
-        });
-
-        settingsMenu:AddToggle({
-            text = 'Rainbow Keybind Visualizer',
-            callback = function(t)
-                if (not t) then
-                    return maid.rainbowKeybindVisualizer;
-                end;
-
-                maid.rainbowKeybindVisualizer = task.spawn(function()
-                    while task.wait() do
-                        visualizer:UpdateColor(library.chromaColor);
-                    end;
-                end);
-            end
-        })
-
         settingsMenu:AddList({
             text = 'Background',
             flag = 'UI Background',
             values = {'Floral', 'Flowers', 'Circles', 'Hearts'},
             callback = function(Value)
                 if Backgrounds[Value] then
-                    library.main.Image = 'rbxassetid://' .. Backgrounds[Value]
-                end
-            end
+                    library.main.Image = 'rbxassetid://' .. Backgrounds[Value];
+                end;
+            end;
         }):AddColor({
             flag = 'Menu Background Color',
             color = Color3.new(),
             trans = 1,
             callback = function(Color)
-                library.main.ImageColor3 = Color
+                library.main.ImageColor3 = Color;
             end,
             calltrans = function(Value)
-                library.main.ImageTransparency = 1 - Value
-            end
+                library.main.ImageTransparency = 1 - Value;
+            end;
         });
-
         settingsMenu:AddSlider({
             text = 'Tile Size',
             value = 90,
             min = 50,
             max = 500,
             callback = function(Value)
-                library.main.TileSize = UDim2.new(0, Value, 0, Value)
-            end
-        })
+                library.main.TileSize = UDim2.new(0, Value, 0, Value);
+            end;
+        });
 
         configSection:AddBox({
             text = 'Config Name',
@@ -3522,7 +3478,6 @@ do -- // Load
             flag = 'Config List',
             values = library:GetConfigs(),
         })
-
         configSection:AddButton({
             text = 'Create',
             callback = function()
@@ -3534,11 +3489,9 @@ do -- // Load
 
                     updateAllConfigs();
                 end;
-            end
-        })
-
-        local btn;
-        btn = configSection:AddButton({
+            end;
+        });
+        local btn; btn = configSection:AddButton({
             text = isGlobalConfigOn and 'Switch To Local Config' or 'Switch to Global Config';
 
             callback = function()
@@ -3547,9 +3500,8 @@ do -- // Load
 
                 btn:SetText(isGlobalConfigOn and 'Switch To Local Config' or 'Switch to Global Config');
                 library:ShowMessage('Note: Switching from Local to Global requires script relaunch.');
-            end
+            end;
         });
-
         configSection:AddButton({
             text = 'Save',
             callback = function()
@@ -3563,8 +3515,8 @@ do -- // Load
                 if (showBasePrompt('load')) then
                     library:UpdateConfig(); -- Save config before switching to new one
                     library:LoadConfig(library.flags.configList);
-                end
-            end
+                end;
+            end;
         }):AddButton({
             text = 'Delete',
             callback = function()
@@ -3573,19 +3525,17 @@ do -- // Load
                     local configFilePath = library.foldername .. '/' .. Config .. '.config' .. library.fileext;
 
                     if table.find(library:GetConfigs(), Config) and isfile(configFilePath) then
-                        library.options.configList:RemoveValue(Config)
+                        library.options.configList:RemoveValue(Config);
                         delfile(configFilePath);
-                    end
+                    end;
                 end;
-            end
-        })
-
+            end;
+        });
         configSection:AddList({
             text = 'Load From',
             flag = 'Load From List',
             values = getAllConfigs()
         });
-
         configSection:AddButton({
             text = 'Load From',
             callback = function()
@@ -3607,9 +3557,8 @@ do -- // Load
                 writefile(string.format('%s/%s', library.foldername, fullConfigName), configData);
 
                 library:LoadConfig(configName);
-            end
-        })
-
+            end;
+        });
         configSection:AddToggle({
             text = 'Automatically Save Config',
             state = true,
@@ -3629,8 +3578,8 @@ do -- // Load
                         library:UpdateConfig();
                     end;
                 end);
-            end
-        })
+            end;
+        });
 
         local function saveConfigBeforeGameLeave()
             if (not library.flags.saveconfigauto) then return; end;
@@ -3638,12 +3587,9 @@ do -- // Load
         end;
 
         library.unloadMaid:GiveTask(GuiService.NativeClose:Connect(saveConfigBeforeGameLeave));
-
-        -- NativeClose does not fire on the Lua App
         library.unloadMaid:GiveTask(GuiService.MenuOpened:Connect(saveConfigBeforeGameLeave));
-
         library.unloadMaid:GiveTask(LocalPlayer.OnTeleport:Connect(function(state)
-            if (state ~= Enum.TeleportState.Started and state ~= Enum.TeleportState.RequestedFromServer) then return end;
+            if (state ~= Enum.TeleportState.Started and state ~= Enum.TeleportState.RequestedFromServer) then return; end;
             saveConfigBeforeGameLeave();
         end));
 
@@ -3665,7 +3611,6 @@ do -- // Load
 				end;
 			end
 		})
-
 		extraSection:AddButton({
 			text = 'Rejoin Server',
 			callback = function()
@@ -3680,7 +3625,6 @@ do -- // Load
 				until false
 			end
 		})
-
 		extraSection:AddButton({
 			text = 'Server Hop',
 			callback = function()
@@ -3691,39 +3635,47 @@ do -- // Load
 				until false
 			end
 		})
-
 		extraSection:AddButton({
 			text = 'Copy javascript invite',
 			callback = function()
-				setclipboard('Roblox.GameLauncher.joinGameInstance('.. game.PlaceId.. ', "'.. game.JobId.. '")');
+				setclipboard(`Roblox.GameLauncher.joinGameInstance('{game.PlaceId}', '{game.JobId}')`);
 			end;
+		})
+
+		extraSection:AddDivider()
+		extraSection:AddToggle({
+			text = 'Debug',
+			tip = 'this is for vocat to test stuff',
+			flag = 'debug mode'
 		})
 
 		discordSection:AddButton({
             text = 'Join Discord',
-            callback = function() return joinDiscord('') end
+            callback = function() return joinDiscord(''); end;
         });
-
         discordSection:AddButton({
             text = 'Copy Discord Invite',
-            callback = function() return setclipboard('') end
+            callback = function() return setclipboard(''); end;
         });
+
+		detectionSection:AddToggle({
+			text = 'Bypass Adonis',
+			tip = 'bypasses stupid adonis anticheat',
+			callback = function(t) return toggleDetectionBypass('adonis', t); end;
+		});
+		detectionSection:AddToggle({
+			text = 'Spoof Memory',
+			tip = 'some games check for memory spikes to detect large scripts',
+			callback = function(t) return toggleDetectionBypass('memory', t); end;
+		});
+		detectionSection:AddToggle({
+			text = 'Anti Preload Async',
+			tip = 'some games use this to check for things in core gui',
+			callback = function(t) return toggleDetectionBypass('preloadAsync', t); end;
+		});
     end;
 end;
 
-warn(string.format('[Library 15] Loaded in %.02f seconds', tick() - libraryLoadAt));
-
-library.OnFlagChanged:Connect(function(data)
-    local keybindExists = library.options[string.lower(data.flag) .. 'Bind'];
-    if (not keybindExists or not keybindExists.key or keybindExists.key == 'none') then return end;
-
-    local toggled = library.flags[data.flag];
-
-    if (toggled) then
-        visualizer:AddText(data.text);
-    else
-        visualizer:RemoveText(data.text);
-    end
-end);
+warn(string.format('[Library 20] Loaded in %.02f seconds', tick() - libraryLoadAt));
 
 return library;
