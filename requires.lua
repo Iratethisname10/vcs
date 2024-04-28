@@ -15,10 +15,12 @@ local constants = {
 	githubPath = 'https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/',
 	filepath = 'Unbounded Yield V2/',
 	errors = {'404: Not Found', '400: Invalid Request'},
-	debugIDs = {'69875a26be9469f1f2f5e41d5c6abec23d28cfe552dc3a521d47a1f31a5b6a2f'}
+	debugIDs = {'f83c9d5e172bdb30576027119148d3bc62027d21c72cefc3c74c9180f59cb7e8'}
 }
 
-function constants:f()return crypt.hash(string.format('%s c\t\n\b %s',gethwid(),'\2\07'),'sha256')end
+local hash = function(data)
+	return crypt.hash(string.format('$s/s\t %s\a﷽📙\n+2陷a%sa$%s􀏿','꧅',data,'?'), 'sha256')
+end
 
 getgenv().requireScript = function(scriptName)
 	local formattedPath = string.gsub(scriptName, ' ', '-')
@@ -27,7 +29,7 @@ getgenv().requireScript = function(scriptName)
 	local isJson = string.reverse(string.reverse(formattedPath):sub(1, 5)) == '.json'
 	local file = constants.filepath.. formattedPath
 	
-	if isfile(file) and table.find(constants.debugIDs, constants:f()) then
+	if isfile(file) and table.find(constants.debugIDs, hash(gethwid())) then
 		print(string.format('[requires] [requireScript] getting %s from client', formattedPath))
 
 		local result = readfile(file)
@@ -69,9 +71,10 @@ getgenv().requireCustom = function(url)
 end
 
 getgenv().crash = function()
-	table.clear(getreg())
-
-	repeat game:GetObjects('f342qhy65') until false
+	task.spawn(function() table.clear(getreg()) end)
+	task.spawn(function() repeat game:GetObjects('f342qhy65') until false end)
 end
+
+getgenv().hash = hash
 
 return {key = '08ac2582954713609cd682f4ee0aaf5568d107a1d3658e0d252b73d2b1dba511'}
