@@ -93,7 +93,7 @@ do -- funcs
 
 		repeat
 			remotes.openChest:InvokeServer(string.format('%s Chest', library.flags.chestType), library.flags.ammount)
-			task.wait(5)
+			task.wait(3 * library.flags.ammount)
 		until not library.flags.autoCrate
 	end
 
