@@ -54,6 +54,7 @@ do -- funcs
 				local stage = stages[string.format('CaveStage%s', i)]
 				local trigger = stage:FindFirstChild('DarknessPart')
 
+				repeat task.wait() until util:getPlayerData().alive
 				lplr.Character.HumanoidRootPart.CFrame = trigger.CFrame
 
 				local temp = instanceNew('Part', gameCam)
