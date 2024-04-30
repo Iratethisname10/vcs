@@ -20,8 +20,6 @@ library.unloadMaid:GiveTask(workspace:GetPropertyChangedSignal('CurrentCamera'):
 	gameCamera = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera')
 end))
 
-local mouse = lplr:GetMouse()
-
 local maid = requireScript('maid.lua').new()
 local util = requireScript('utils.lua')
 
