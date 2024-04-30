@@ -5,6 +5,7 @@ local column1, column2 = buildABoat:AddColumn(), buildABoat:AddColumn()
 local cloneref = cloneref or function(instance) return instance end
 
 local playersService = cloneref(game:GetService('Players'))
+local lightingService = cloneref(game:GetService('Lighting'))
 
 local vector3New = Vector3.new
 local vector3Zero = Vector3.zero
