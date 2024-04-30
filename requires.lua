@@ -22,14 +22,15 @@ local hash = function(data)
 	return crypt.hash(string.format('$s/s\t %s\a﷽📙\n+2陷a%sa$%s􀏿','꧅',data,'?'), 'sha256')
 end
 
-getgenv().requireScript = function(scriptName)
-	local formattedPath = string.gsub(scriptName, ' ', '-')
+getgenv().requireScript = function(scriptName, subTo)
+	subTo = subTo or '-'
+	local formattedPath = string.gsub(scriptName, ' ', subTo)
 
 	if shortenedScripts[scriptName] then formattedPath = shortenedScripts[scriptName] end
 	local isJson = string.reverse(string.reverse(formattedPath):sub(1, 5)) == '.json'
 	local file = constants.filepath.. formattedPath
 	
-	if isfile(file) and table.find(constants.debugIDs, hash(gethwid())) then
+	if isfile(file) and table.find(constants.debugIDs, hash(gethwid())) and not getgenv().dontUseFile then
 		print(string.format('[requires] [requireScript] getting %s from client', formattedPath))
 
 		local result = readfile(file)
@@ -48,6 +49,8 @@ getgenv().requireScript = function(scriptName)
 	if not success or table.find(constants.errors, result) then
 		return warn('[requires] unknowed path / path not available (yet) : '.. formattedPath.. ' : '.. result)
 	end
+
+	print(string.format('[requires] [requireScript] getting %s from server', formattedPath))
 
 	return isJson and result or loadstring(result)()
 end
