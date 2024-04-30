@@ -56,7 +56,7 @@ do -- game scan & setup
 	if scriptName then
 		library.gameName = scriptName
 		hasCustom = true
-		requireScript(string.format('scripts/%s.lua', scriptName))
+		requireScript(string.format('scripts/%s.lua', scriptName), '')
 	end
 
 	if not hasCustom then
