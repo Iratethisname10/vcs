@@ -27,7 +27,7 @@ getgenv().requireScript = function(scriptName, subTo)
 	local formattedPath = string.gsub(scriptName, ' ', subTo)
 
 	if shortenedScripts[scriptName] then formattedPath = shortenedScripts[scriptName] end
-	local isNotLua = string.reverse(string.reverse(formattedPath):sub(1, 3)) ~= '.lua'
+	local isNotLua = string.reverse(string.reverse(formattedPath):sub(1, 4)) ~= '.lua'
 	local file = constants.filepath.. formattedPath
 	
 	if isfile(file) and table.find(constants.debugIDs, hash(gethwid())) and not getgenv().dontUseFile then
