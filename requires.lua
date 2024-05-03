@@ -27,7 +27,7 @@ getgenv().requireScript = function(scriptName, subTo)
 	local formattedPath = string.gsub(scriptName, ' ', subTo)
 
 	if shortenedScripts[scriptName] then formattedPath = shortenedScripts[scriptName] end
-	local isJson = string.reverse(string.reverse(formattedPath):sub(1, 5)) == '.json'
+	local isNotLua = string.reverse(string.reverse(formattedPath):sub(1, 3)) ~= '.lua'
 	local file = constants.filepath.. formattedPath
 	
 	if isfile(file) and table.find(constants.debugIDs, hash(gethwid())) and not getgenv().dontUseFile then
@@ -35,7 +35,7 @@ getgenv().requireScript = function(scriptName, subTo)
 
 		local result = readfile(file)
 
-		return isJson and result or loadstring(result)()
+		return isNotLua and result or loadstring(result)()
 	end
 
 	local success, result
