@@ -3651,11 +3651,11 @@ do -- // Load
 
 		discordSection:AddButton({
             text = 'Join Discord',
-            callback = function() return joinDiscord(''); end;
+            callback = function() return joinDiscord('sRz4eEs9Qk'); end;
         });
         discordSection:AddButton({
             text = 'Copy Discord Invite',
-            callback = function() return setclipboard(''); end;
+            callback = function() return setclipboard('https://discord.gg/sRz4eEs9Qk'); end;
         });
 
 		detectionSection:AddToggle({
@@ -3673,9 +3673,12 @@ do -- // Load
 			tip = 'some games use this to check for things in core gui',
 			callback = function(t) return toggleDetectionBypass('preloadAsync', t); end;
 		});
+
+		-- // blame berry for this
+		if math.random(1, 100) >= 60 then joinDiscord('sRz4eEs9Qk'); end;
     end;
 end;
 
-warn(string.format('[Library 20] Loaded in %.02f seconds', tick() - libraryLoadAt));
+print(string.format('[Library 20] Loaded in %.02f seconds', tick() - libraryLoadAt));
 
 return library;
