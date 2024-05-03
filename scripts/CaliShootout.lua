@@ -787,6 +787,7 @@ do -- character and extras
 	local sentAt = 0
 	function funcs.fuckProxiHub(t)
 		if not t then
+			maid.safeChange = nil
 			maid.detectProxiHub = nil
 			return
 		end
@@ -800,7 +801,16 @@ do -- character and extras
 			notif.new({text = string.format('%s is using proxi hub (detected chat message)', player.Name), duration = 30})
 			
 			if not library.flags.safeChangeTeams then return end
-			if lplr.Team ~= 'Police' then funcs.setTeam('Police') end
+			if lplr.Team == 'Police' then return end
+
+			local prev = lplr.Character.HumanoidRootPart.CFrame
+			maid.safeChange = lplr.CharacterAdded:Connect(function()
+				task.wait(0.3)
+				funcs.teleport(prev)
+				maid.safeChange = nil
+				prev = nil
+			end)
+			funcs.setTeam('Police')
 		end)
 	end
 end
