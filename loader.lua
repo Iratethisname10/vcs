@@ -267,8 +267,7 @@ library.unloadMaid:GiveTask(playersService.LocalPlayer.OnTeleport:Connect(functi
 	if teleported or state ~= Enum.TeleportState.InProgress then return end
 	teleported = true
 
-	--queue_on_teleport(`loadstring(game:HttpGet('https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/loader.lua'))()`)
-	queue_on_teleport(`loadstring(readfile('Unbounded Yield V2/loader.lua'))()`)
+	queue_on_teleport(`loadstring(game:HttpGet('https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/loader.lua'))()`)
 end))
 
 library:Init(getgenv().USE_INSECURE_PARENT)
