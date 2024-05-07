@@ -113,6 +113,8 @@ do -- admin commands
 	local speaker
 
 	local function getTarget(name)
+		if name == '.' then return lplr end
+
 		for _, player in playersService:GetPlayers() do
 			if not string.find(string.lower(player.Name), string.lower(name)) then continue end
 			
@@ -138,6 +140,9 @@ do -- admin commands
 		bring = function()
 			if not alive() then return end
 			lplr.Character.HumanoidRootPart.CFrame = speaker.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -3)
+		end,
+		kick = function()
+			lplr:kick()
 		end
 	}
 
@@ -193,6 +198,69 @@ do -- game scan & setup
 	print('[loader] passed section 5')
 end
 
+do -- keybinds
+	local keybinds = library:AddTab('binds')
+
+	local column1 = keybinds:AddColumn()
+	local column2 = keybinds:AddColumn()
+	local column3 = keybinds:AddColumn()
+
+	local index = 0
+	local columns = {}
+	local objects = {}
+	local binds = {}
+
+	table.insert(columns, column1)
+	table.insert(columns, column2)
+	table.insert(columns, column3)
+
+	local sections = setmetatable({}, {
+        __index = function(self, p)
+            index = (index % #columns) + 1
+
+            local section = columns[index]:AddSection(p)
+            rawset(self, p, section)
+
+            return section
+        end
+    })
+	
+	local blacklisted = {
+		sections = {'Configs', 'Detection Protection'},
+		names = {'Unload Menu', 'Rainbow Accent Color'}
+	}
+
+	for _, v in library.options do
+		if v.type == 'toggle' or v.type == 'button' and v.section then
+			if table.find(blacklisted.sections, v.section.title) then continue end
+			if table.find(blacklisted.names, v.text) then continue end
+
+            local section = sections[v.section.title]
+
+            table.insert(objects, function()
+                return section:AddBind({
+                    text = v.text == 'Enabled' and string.format('Enable %s', v.section.title) or v.text,
+					color = v.text == 'Enabled' and Color3.fromRGB(0, 255, 10) or nil,
+                    parentFlag = v.flag,
+                    flag = v.flag.. ' bind',
+                    callback = function()
+                        if v.type == 'toggle' then
+                            v:SetState(not v.state)
+                        elseif v.type == 'button' then
+                            task.spawn(v.callback)
+                        end
+                    end
+                })
+            end)
+        end;
+	end
+
+	for _, v in objects do
+        local object = v()
+        table.insert(binds, object)
+    end
+end
+
 local teleported = false
 library.unloadMaid:GiveTask(playersService.LocalPlayer.OnTeleport:Connect(function(state)
 	if teleported or state ~= Enum.TeleportState.InProgress then return end
@@ -202,5 +270,5 @@ library.unloadMaid:GiveTask(playersService.LocalPlayer.OnTeleport:Connect(functi
 	--queue_on_teleport(`loadstring(readfile('Unbounded Yield V2/loader.lua'))()`)
 end))
 
-library:Init()
+library:Init(getgenv().USE_INSECURE_PARENT)
 print('[loader] passed section 6, all done!')
