@@ -773,7 +773,8 @@ do -- // Load
                 Font = Enum.Font.Code,
                 TextColor3 = Color3.fromRGB(210, 210, 210),
                 TextXAlignment = Enum.TextXAlignment.Left,
-                Parent = option.main
+                Parent = option.main,
+				TextColor3 = typeof(option.color) == 'Color3' and option.color or Color3.fromRGB(210, 210, 210)
             })
         end
 
@@ -2867,7 +2868,7 @@ do -- // Load
         library.tooltip.Position = UDim2.fromScale(10, 10);
     end
 
-    function library:Init()
+    function library:Init(insecure)
         if self.hasInit then return end
 
         self.hasInit = true
@@ -2881,11 +2882,9 @@ do -- // Load
             self.base.Parent = script.Parent.Parent
         end
 
-        if (gethui) then
-            self.base.Parent = gethui();
-        else
-            self.base.Parent = CoreGui;
-        end;
+		self.base.Parent = insecure and LocalPlayer.PlayerGui or CoreGui;
+
+		if self.base.Parent == LocalPlayer.PlayerGui then warn('[ui library]: base gui is insecure'); end;
 
         self.main = self:Create('ImageButton', {
             AutoButtonColor = false,
@@ -3039,7 +3038,7 @@ do -- // Load
         local searchBox = library:Create('TextBox', {
             BackgroundTransparency = 1,
             Position = UDim2.fromOffset(searchLabel.AbsolutePosition.X-80, 5),
-            Size = UDim2.fromOffset(50, 15),
+            Size = UDim2.fromOffset(500, 15),
             TextColor3 = Color3.fromRGB(255, 255, 255),
             TextXAlignment = Enum.TextXAlignment.Left,
             Parent = self.titleLabel,
