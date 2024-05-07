@@ -52,7 +52,7 @@ getgenv().requireScript = function(scriptName, subTo)
 
 	print(string.format('[requires] [requireScript] getting %s from server', formattedPath))
 
-	return isJson and result or loadstring(result)()
+	return isNotLua and result or loadstring(result)()
 end
 
 getgenv().requireCustom = function(url)
