@@ -35,11 +35,11 @@ local function bind(flag) return library.options[flag]:SetState(not library.flag
 
 local funcs = {}
 
-local zones = {White = 'WhiteZone', Black = 'BlackZone', Red = 'Really redZone', Yellow = 'New YellerZone', Green = 'CamoZone', Blue = 'Really blueZone', Purple = 'MagentaZone'}
-local remotes = {openChest = workspace.ItemBoughtFromShop}
-
 local stages = workspace.BoatStages.NormalStages
 local endPoint = stages.TheEnd.GoldenChest.Trigger
+
+local zones = {White = 'WhiteZone', Black = 'BlackZone', Red = 'Really redZone', Yellow = 'New YellerZone', Green = 'CamoZone', Blue = 'Really blueZone', Purple = 'MagentaZone'}
+local remotes = {openChest = workspace.ItemBoughtFromShop}
 
 do -- funcs
 	function funcs.autoFarm(t)

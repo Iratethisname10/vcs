@@ -1,8 +1,8 @@
-local combat = library:AddTab('Combat')
-local visual = library:AddTab('Visual')
-local player = library:AddTab('Player')
-local utility = library:AddTab('Utility')
-local misc = library:AddTab('Miscellaneous')
+local combat = library:AddTab('combat')
+local visual = library:AddTab('visuals')
+local player = library:AddTab('player')
+local utility = library:AddTab('utility')
+local misc = library:AddTab('misc')
 
 local combat1, combat2 = combat:AddColumn(), combat:AddColumn()
 local visual1, visual2 = visual:AddColumn(), visual:AddColumn()
@@ -18,6 +18,7 @@ local userInputService = cloneref(game:GetService('UserInputService'))
 local tweenService = cloneref(game:GetService('TweenService'))
 local replicatedStorageService = cloneref(game:GetService('ReplicatedStorage'))
 local lightingService = cloneref(game:GetService('Lighting'))
+local proximityPromptService = cloneref(game:GetService('ProximityPromptService'))
 
 local renderSettings = cloneref(settings():GetService('RenderSettings'))
 
@@ -42,6 +43,11 @@ local randomNew = Random.new
 local drawingNew = Drawing.new
 local instanceNew = Instance.new
 
+local insert = table.insert
+local find = table.find
+local remove = table.remove
+local clear = table.clear
+
 if not playersService.LocalPlayer then playersService:GetPropertyChangedSignal('LocalPlayer'):Wait() end
 local lplr = playersService.LocalPlayer
 
@@ -61,7 +67,6 @@ local notif = requireScript('notifs.lua')
 
 local espLibrary = requireScript('utils/helpers/esp.lua')
 local aimLibrary = requireScript('utils/helpers/aim.lua')
-local predictionUtils = requireScript('utils/helpers/prediction.lua')
 
 local debug = library.flags.debugMode
 library.OnFlagChanged:Connect(function(data)
@@ -141,9 +146,6 @@ do
 				lplr.Character.Humanoid.WalkSpeed = walkspeed
 			end
 		end
-	}):AddBind({
-		flag = 'speed bind',
-		callback = function() bind('speed') end
 	})
 	speedSection:AddDivider()
 	speedSection:AddList({text = 'Method', flag = 'speed mode', values = {'Velocity', 'CFrame', 'Move To', 'Translate', 'Speed'}, callback = function(val) veloList.main.Visible = val == 'CFrame'; defusionSlider.main.Visible = val == 'Move To' or val == 'Translate' end})
@@ -223,9 +225,6 @@ do
 				if driftCancelBV then driftCancelBV.Parent = nil end
 			end
 		end
-	}):AddBind({
-		flag = 'fly bind',
-		callback = function() bind('fly') end
 	})
 	flySection:AddDivider()
 	flySection:AddList({text = 'Method', flag = 'fly mode', values = {'Velocity', 'CFrame'}, callback = function(val) veloList.main.Visible = val == 'CFrame' end})
@@ -286,7 +285,7 @@ do
 		end,
 		Surroundings = function()
 			local ignore = {gameCam, lplr.Character}
-			for _, player in playersService:GetPlayers() do table.insert(ignore, player.Character) end
+			for _, player in playersService:GetPlayers() do insert(ignore, player.Character) end
 
 			overlapParams.FilterDescendantsInstances = ignore
 
@@ -302,7 +301,7 @@ do
 			end
 
 			for part, _ in moddedParts do
-				if table.find(parts, part) then continue end
+				if find(parts, part) then continue end
 
 				moddedParts[part] = nil
 				part.CanCollide = true
@@ -310,7 +309,7 @@ do
 		end,
 		Teleport = function()
 			local ignore = {gameCam, lplr.Character}
-			for _, player in playersService:GetPlayers() do table.insert(ignore, player.Character) end
+			for _, player in playersService:GetPlayers() do insert(ignore, player.Character) end
 
 			rayParams.FilterDescendantsInstances = ignore
 
@@ -337,7 +336,7 @@ do
 			else
 				maid.noclip = nil
 				for part, _ in moddedParts do if part then part.CanCollide = true end end
-				table.clear(moddedParts)
+				clear(moddedParts)
 
 				if not library.flags.instantRevert then return end
 				if not util:getPlayerData().alive then return end
@@ -347,9 +346,6 @@ do
 				lplr.Character.Humanoid:ChangeState('RunningNoPhysics')
 			end
 		end
-	}):AddBind({
-		flag = 'noclip bind',
-		callback = function() bind('noclip') end
 	})
 	noclipSection:AddDivider()
 	noclipSection:AddList({text = 'Method', flag = 'noclip mode', values = {'Character', 'Surroundings', 'Teleport'}, callback = function(val) instantRevertToggle.main.Visible = val == 'Character'; maxTeleportDistanceSlider.main.Visible = val == 'Teleport' end})
@@ -404,9 +400,6 @@ do
 				debounce = false
 			end
 		end
-	}):AddBind({
-		flag = 'inf jump bind',
-		callback = function() bind('inf jump') end
 	})
 	infJumpSection:AddDivider()
 	infJumpSection:AddList({text = 'Method', flag = 'inf jump mode', values = {'Velocity', 'Real Jump'}, callback = function(val) jumpHeightSlider.main.Visible = val == 'Velocity' end})
@@ -522,9 +515,6 @@ do
 				if tween then tween:Cancel(); tween = nil end
 			end
 		end
-	}):AddBind({
-		flag = 'mouse tp bind',
-		callback = function() bind('mouseTP') end
 	})
 	mouseTpSection:AddDivider()
 	mouseTpSection:AddList({text = 'Method', flag = 'mouse tp method', values = {'Mouse', 'Ray Cast'}})
@@ -562,9 +552,6 @@ do
 				lplr.Character.HumanoidRootPart.CFrame = cframeNew(player.HumanoidRootPart.CFrame.Position)
 			end)
 		end
-	}):AddBind({
-		flag = 'player tp bind',
-		callback = library.options.teleportToPlayer.callback
 	})
 	playerTpSection:AddToggle({
 		text = 'Spectate Player',
@@ -641,9 +628,6 @@ do
 				if visualizerPart then visualizerPart.Parent = nil end
 			end
 		end
-	}):AddBind({
-		flag = 'terrain changer bind',
-		callback = function() bind('terrainChanger') end
 	})
 	terrainChangerSection:AddDivider()
 	terrainChangerSection:AddSlider({text = 'Range', textpos = 2, min = 5, max = 100, value = 50, flag = 'terrain changer range'})
@@ -674,11 +658,11 @@ do
 		local espDonePlayer = espLibrary.new(player)
 	
 		library.unloadMaid[player] = function()
-			table.remove(espPlayers, table.find(espPlayers, espDonePlayer))
+			remove(espPlayers, find(espPlayers, espDonePlayer))
 			espDonePlayer:Destroy()
 		end
 	
-		table.insert(espPlayers, espDonePlayer)
+		insert(espPlayers, espDonePlayer)
 	end
 
 	local function onPlayerRemoving(player)
@@ -730,9 +714,6 @@ do
 				end
 			end
 		end
-	}):AddBind({
-		flag = 'toggle esp bind',
-		callback = function() bind('toggleEsp') end
 	})
 	espSection:AddDivider()
 	espSection:AddSlider({
@@ -809,6 +790,7 @@ do
 	espSection:AddDivider()
 	espSection:AddToggle({
 		text = 'Render Team Members',
+		state = true
 	})
 	espSection:AddToggle({
 		text = 'Only Render Niggers'
@@ -835,7 +817,8 @@ do
 		color = Color3.fromRGB(255, 0, 0)
 	})
 	espSection:AddToggle({
-		text = 'Use Team Color'
+		text = 'Use Team Color',
+		state = true
 	})
 end
 
@@ -876,11 +859,6 @@ do
 	})
 	resetChatViolationsSection:AddButton({
 		text = 'Reset Chat Violations',
-		callback = reset
-	})
-	resetChatViolationsSection:AddBind({
-		text = 'Reset Chat Violations',
-		flag = 'reset cvl bind',
 		callback = reset
 	})
 end
@@ -1335,7 +1313,7 @@ do
 					if checkcaller() then return oldNamecall(self, ...) end
 
 					if getnamecallmethod() ~= library.flags.silentAimMethod then return oldNamecall(self, ...) end
-					if table.find(blacklistedScripts, tostring(getcallingscript())) then return oldNamecall(self, ...) end
+					if find(blacklistedScripts, tostring(getcallingscript())) then return oldNamecall(self, ...) end
 
 					local args = {...}
 					print(actualCallingMethods[library.flags.silentAimMethod])
@@ -1375,9 +1353,6 @@ do
 				if circleOutline then circleOutline.Visible = false end
 			end
 		end
-	}):AddBind({
-		flag = 'silent aim bind',
-		callback = function() bind('silentAim') end
 	})
 	silentAimSection:AddDivider()
 	silentAimSection:AddList({
@@ -1400,7 +1375,7 @@ do
 		flag = 'silent aim fov circle',
 		callback = function(t)
 			if t then
-				circle = drawingNew('Circle')
+				circle = circle or drawingNew('Circle')
 				circle.Color = library.flags.silentAimCircleColor
 				circle.Filled = library.flags.silentAimCircleFilled
 				circle.NumSides = library.flags.silentAimCircleSides
@@ -1411,7 +1386,7 @@ do
 				circle.ZIndex = 2
 				circle.Position = userInputService:GetMouseLocation()
 
-				circleOutline = drawingNew('Circle')
+				circleOutline = circleOutline or drawingNew('Circle')
 				circleOutline.Color = Color3.fromRGB(0, 0, 0)
 				circleOutline.Filled = false
 				circleOutline.NumSides = library.flags.silentAimCircleSides
@@ -1514,9 +1489,6 @@ do
 				if circleOutline then circleOutline.Visible = false end
 			end
 		end
-	}):AddBind({
-		flag = 'aim bot bind',
-		callback = function() bind('aimBot') end
 	})
 	aimBotSection:AddDivider()
 	aimBotSection:AddList({text = 'Aim Part', flag = 'aim bot aim part', values = {'Head', 'HumanoidRootPart'}})
@@ -1629,15 +1601,15 @@ do
 						if not root or player == lplr then continue end
 
 						local distance = (lplr.Character.HumanoidRootPart.CFrame.Position - root.CFrame.Position).Magnitude
-						if distance < (library.flags.ppcRange * 10) and not table.find(players, root) then
+						if distance < (library.flags.ppcRange * 10) and not find(players, root) then
 							task.spawn(function()
-								table.insert(players, root)
+								insert(players, root)
 								if library.flags.ppcLeave then leaveFuncs[library.flags.ppcLeaveMode]() end
 								if library.flags.ppcNotify then notif.new({text = string.format('%s is %.02f studs to you', player.Name, distance), duration = 20}) end
 							end)
-						elseif distance > (library.flags.ppcRange * 1000) + 50 and table.find(players, root) then
+						elseif distance > (library.flags.ppcRange * 1000) + 50 and find(players, root) then
 							task.spawn(function()
-								table.remove(players, table.find(players, rootPart))
+								remove(players, find(players, rootPart))
 								if library.flags.ppcNotify then notif.new({text = string.format('%s is not close to you anymore: %.02f studs', player.Name, distance), duration = 20}) end
 							end)
 						end
@@ -1647,9 +1619,6 @@ do
 				maid.proximityChecker = nil
 			end
 		end
-	}):AddBind({
-		flag = 'player proximity checker bind',
-		callback = function() bind('playerProximityChecker') end
 	})
 	proximityDetectorSection:AddDivider()
 	proximityDetectorSection:AddSlider({text = 'Detection Range', textpos = 2, flag = 'ppc range', min = 100, max = 10000, tip = 'values are multiplies by 10.', value = 5})
@@ -1696,9 +1665,6 @@ do
 				maid.equipToolsLoop = nil
 			end
 		end
-	}):AddBind({
-		flag = 'grab tools bind',
-		callback = function() bind('grabTools') end
 	})
 	toolsSection:AddButton({text = 'Grab Tools', tip = 'puts all dropped tools in your inv', callback = equipTool})
 
@@ -1724,9 +1690,6 @@ do
 				lplr.Character.Humanoid:UnequipTools()
 			end
 		end
-	}):AddBind({
-		flag = 'equip all tools bind',
-		callback = function() bind('equipAllTools') end
 	})
 end
 
@@ -1768,9 +1731,6 @@ do
 				maid.antiAim = nil
 			end
 		end
-	}):AddBind({
-		flag = 'anti aim bind',
-		callback = function() bind('antiAim') end
 	})
 	antiAimSection:AddDivider()
 	antiAimSection:AddList({
@@ -1814,9 +1774,6 @@ do
 				if oldFov then gameCam.FieldOfView = oldFov end
 			end
 		end
-	}):AddBind({
-		flag = 'cam fov bind',
-		callback = function() bind('cameraFov') end
 	})
 	fovSection:AddSlider({
 		text = 'Field Of View',
@@ -1829,7 +1786,7 @@ do
 end
 
 do
-	local disablerSection = utility2:AddSection('Disablers')
+	local disablerSection = utility2:AddSection('Anti Client Kick')
 
 	local function antikickHookable(self)
 		if not library.flags.clientAntiKick then return false; end;
@@ -1845,7 +1802,7 @@ do
 	local hooked = false
 
 	disablerSection:AddToggle({
-		text = 'Client Anti Kick',
+		text = 'Enabled',
 		risky = true,
 		callback = function(t)
 			if t then
@@ -1942,9 +1899,6 @@ do
 				target = nil
 			end
 		end
-	}):AddBind({
-		flag = 'target strafe bind',
-		callback = function() bind('targetStrafe') end
 	})
 	targetStrafeSection:AddDivider()
 	targetStrafeSection:AddList({
@@ -1999,14 +1953,11 @@ do
 				Jpart.CFrame = cframeNew(0, workspace.FallenPartsDestroyHeight - 2, 0)
 			end
 		end
-	}):AddBind({
-		flag = 'jesus bind',
-		callback = function() bind('jesus') end
 	})
 end
 
 do
-	local triggerBotSection = combat1:AddSection('Trigger Bot')
+	local triggerBotSection = combat2:AddSection('Trigger Bot')
 
 	local ball = instanceNew('Part', nil)
 	ball.Shape = Enum.PartType.Ball
@@ -2018,16 +1969,16 @@ do
 	ball.Material = Enum.Material.Neon
 	ball.CFrame	= cframeNew(0, workspace.FallenPartsDestroyHeight - 2, 0)
 
-	local rayParams = RaycastParams.new()
-	rayParams.FilterType = Enum.RaycastFilterType.Exclude
-	rayParams.FilterDescendantsInstances = {gameCam, lplr.Character}
-
 	triggerBotSection:AddToggle({
 		text = 'Enabled',
 		flag = 'trigger bot',
 		callback = function(t)
 			if t then
 				maid.triggerBot = runService.RenderStepped:Connect(function()
+					local rayParams = RaycastParams.new()
+					rayParams.FilterType = Enum.RaycastFilterType.Exclude
+					rayParams.FilterDescendantsInstances = {gameCam, lplr.Character}
+
 					local ray = workspace:Raycast(gameCam.CFrame.Position, (library.flags.triggerBotAimMode == 'Camera' and gameCam.CFrame.lookVector or mouse.UnitRay.Direction) * 15000, rayParams)
 					local position = ray and ray.Position or vector3New(0, workspace.FallenPartsDestroyHeight - 2, 0)
 					local instance = ray and ray.Instance
@@ -2037,7 +1988,7 @@ do
 					for _, player in playersService:GetPlayers() do
 						if not player or not player.Character then continue end
 
-						if instance:IsDescendantOf(player.Character) then
+						if instance:IsDescendantOf(player.Character) and not library.open and isrbxactive() then
 							mouse1click()
 						end
 					end
@@ -2053,14 +2004,52 @@ do
 				ball.CFrame	= cframeNew(0, workspace.FallenPartsDestroyHeight - 2, 0)
 			end
 		end
-	}):AddBind({
-		flag = 'trigger bot bind',
-		callback = function() bind('triggerBot') end
 	})
 	triggerBotSection:AddDivider()
 	triggerBotSection:AddList({
 		text = 'Aim Mode',
 		values = {'Mouse', 'Camera'},
 		flag = 'trigger bot aim mode'
+	})
+end
+
+do
+	local autoClickerSection = utility1:AddSection('Auto Clicker')
+
+	autoClickerSection:AddToggle({
+		text = 'Enabled',
+		flag = 'auto clicker',
+		tip = 'will not click if the ui is open or you are not roblox focused.',
+		callback = function(t)
+			if t then
+				maid.autoClicker = runService.RenderStepped:Connect(function()
+					if library.open or not isrbxactive() then return end
+
+					mouse1click()
+					task.wait(1 / library.flags.autoClickerCPS)
+				end)
+			else
+				maid.autoClicker = nil
+			end
+		end
+	})
+	autoClickerSection:AddSlider({text = 'Clicks Per Second', flag = 'auto clicker c p s', min = 1, max = 30, value = 10})
+end
+
+do
+	local interactionsSection = utility1:AddSection('Interaction')
+
+	interactionsSection:AddToggle({
+		text = 'Instant Interact',
+		tip = 'lets you instantly finnish proximity prompts.',
+		callback = function(t)
+			if t then
+				maid.instantInteract = proximityPromptService.PromptButtonHoldBegan:Connect(function(prompt)
+					fireproximityprompt(prompt)
+				end)
+			else
+				maid.instantInteract = nil
+			end
+		end
 	})
 end

@@ -48,6 +48,8 @@ local remove = table.remove
 local clear = table.clear
 local sort = table.sort
 
+getgenv().USE_INSECURE_PARENT = true
+
 if not playersService.LocalPlayer then playersService:GetPropertyChangedSignal('LocalPlayer'):Wait() end
 local lplr = playersService.LocalPlayer
 
@@ -332,8 +334,24 @@ do -- visuals
 	function funcs.noGunBlur(t) modules.blurModule.Create = t and function() end or oroldBlurFunction end
 	function funcs.noSmokeTrail(t) modules.smokeTrailModule.EmitSmokeTrail = t and function() end or oldSmokEmmitFunction end
 
+	function funcs.changeTime(t)
+		if not t then
+			maid.customTime = nil
+			if not oldTime then return end
+			lightingService.ClockTime = oldTime
+			return
+		end
+
+		oldTime = lightingService.ClockTime
+
+		maid.customTime = lightingService:GetPropertyChangedSignal('ClockTime'):Connect(function()
+			lightingService.ClockTime = library.flags.timeOfDay
+		end)
+		lightingService.ClockTime = library.flags.timeOfDay
+	end
+
 	local oldData, processing = {}, false
-	function funcs.changeCharacterMaterial()
+	local function changeCharacterMaterial()
 		repeat task.wait() until not processing
 		repeat task.wait() until lplr.Character or not library.flags.materialChams
 		for i, v in next, lplr.Character:GetDescendants() do
@@ -362,10 +380,10 @@ do -- visuals
 			return
 		end
 		
-		funcs.changeCharacterMaterial()
+		changeCharacterMaterial()
 		maid.materialChamsChar = lplr.CharacterAdded:Connect(function()
 			task.wait(0.2)
-			funcs.changeCharacterMaterial()
+			changeCharacterMaterial()
 		end)
 	end
 
@@ -1185,7 +1203,7 @@ local autoFarms = misc2:AddSection('Auto Farms')
 local gunMods = misc2:AddSection('Gun Modifications')
 local rage = misc2:AddSection('Rage')
 
-aimbot:AddToggle({text = 'Enabled', flag = 'aim bot', callback = funcs.aimbot}):AddBind({flag = 'aim bot bind', callback = function() bind('aimBot') end})
+aimbot:AddToggle({text = 'Enabled', flag = 'aim bot', callback = funcs.aimbot})
 aimbot:AddDivider()
 aimbot:AddList({text = 'Aim Part', flag = 'aim bot part', values = {'Head', 'HumanoidRootPart'}})
 aimbot:AddSlider({text = 'Field Of View', flag = 'aim bot f o v', min = 10, max = 1000, value = 100, callback = function() end})
@@ -1227,13 +1245,13 @@ aimbot:AddToggle({text = 'Require Mouse Down', flag = 'aim bot mouse check'})
 aimbot:AddList({flag = 'aim bot mouse', values = {'Right', 'Left'}})
 aimbot:AddToggle({text = 'Ignore Un Attackable', flag = 'aim bot ignore'})
 
-antiAim:AddToggle({text = 'Enabled', flag = 'anti aim', callback = funcs.antiAim}):AddBind({flag = 'anti aim bind', callback = function() bind('antiAim') end})
+antiAim:AddToggle({text = 'Enabled', flag = 'anti aim', callback = funcs.antiAim})
 antiAim:AddDivider()
 antiAim:AddList({text = 'Mode', flag = 'anti aim mode', values = {'Shift', 'Random'}})
 antiAim:AddSlider({text = 'Speed', flag = 'anti aim speed', min = 1, max = 1000, value = 130})
 antiAim:AddSlider({text = 'Angle', flag = 'anti aim angle', min = 0, max = 360})
 
-animationPlayer:AddToggle({text = 'Enabled', flag = 'animation player', tip = 'use with anti aim', callback = funcs.animPlayer}):AddBind({flag = 'anim player bind', callback = function() bind('animPlayer') end})
+animationPlayer:AddToggle({text = 'Enabled', flag = 'animation player', tip = 'use with anti aim', callback = funcs.animPlayer})
 animationPlayer:AddDivider()
 animationPlayer:AddList({text = 'Animation', values = animList, value = 'Sleep', callback = function()
 	if library.flags.animationPlayer then
@@ -1309,9 +1327,6 @@ do -- esp
 				end
 			end
 		end
-	}):AddBind({
-		flag = 'toggle esp bind',
-		callback = function() bind('toggleEsp') end
 	})
 	playerESP:AddDivider()
 	playerESP:AddSlider({
@@ -1389,6 +1404,9 @@ effects:AddToggle({text = 'No Hurt Cam', tip = 'removes the death screen', callb
 effects:AddDivider()
 effects:AddToggle({text = 'No Gun Blur', callback = funcs.noGunBlur})
 effects:AddToggle({text = 'No Smoke Trail', callback = funcs.noSmokeTrail})
+effects:AddDivider()
+effects:AddToggle({text = 'Clock Time', callback = funcs.changeTime})
+effects:AddSlider({flag = 'time of day', value = 14, min = 0, max = 23, textpos = 2, float = 0.01, callback = function(val) if not library.flags.clockTime then return end; lightingService.ClockTime = val; end})
 
 local materials = {}
 for _, material in Enum.Material:GetEnumItems() do insert(materials, material.Name) end
@@ -1401,14 +1419,14 @@ materialChams:AddSlider({text = 'Transparency', flag = 'material chams trans', m
 
 extraVisuals:AddToggle({text = 'Show Chat', callback = funcs.showChat})
 
-tpMain:AddToggle({text = 'Click Teleport', callback = funcs.clickTP}):AddBind({flag = 'click tp bind', callback = function() bind('clickTeleport') end})
+tpMain:AddToggle({text = 'Click Teleport', callback = funcs.clickTP})
 
 tpPlayers:AddList({flag = 'player list', playerOnly = true, skipflag = true})
-tpPlayers:AddButton({text = 'Teleport To Player', callback = funcs.toPlayer}):AddBind({flag = 'player tp bind', callback = library.options.teleportToPlayer.callback})
+tpPlayers:AddButton({text = 'Teleport To Player', callback = funcs.toPlayer})
 tpPlayers:AddToggle({text = 'Spectate Player', skipflag = true, callback = funcs.viewPlayer})
 
 tpLocations:AddList({flag = 'tp locations', values = locationName})
-tpLocations:AddButton({text = 'Teleport To Location', callback = funcs.toLocation}):AddBind({flag = 'location tp bind', callback = library.options.teleportToLocation.callback})
+tpLocations:AddButton({text = 'Teleport To Location', callback = funcs.toLocation})
 
 tpSecttings:AddSlider({text = 'Timeout', min = 5, max = 10, tip = 'how long defore the teleport gets cancelled'})
 tpSecttings:AddToggle({text = 'Safe Load', tip = 'waits for the floor to load before letting you walk'})
@@ -1422,27 +1440,27 @@ for _, name in buyNames do
 	tpUtilities:AddButton({text = string.format('Buy %s - %s', name, buys[name].cost), callback = function() funcs.buyWeapon(name, buys[name].text, buys[name].cost) end})
 end
 
-character:AddToggle({text = 'Speed', callback = funcs.speed}):AddBind({flag = 'speed bind', callback = function() bind('speed') end})
+character:AddToggle({text = 'Speed', callback = funcs.speed})
 character:AddSlider({text = 'Speed Value', textpos = 2, min = 10, max = 500, value = 100})
 
 character:AddDivider()
-character:AddToggle({text = 'Fly', callback = funcs.fly}):AddBind({flag = 'fly bind', callback = function() bind('fly') end})
+character:AddToggle({text = 'Fly', callback = funcs.fly})
 character:AddSlider({text = 'Horizontal Value', textpos = 2, min = 1, max = 500, value = 100})
 character:AddSlider({text = 'Vertical Value', textpos = 2, min = 1, max = 500, value = 200})
 
 character:AddDivider()
-character:AddToggle({text = 'High Jump', callback = funcs.highJump}):AddBind({flag = 'high jump bind', callback = function() bind('highJump') end})
+character:AddToggle({text = 'High Jump', callback = funcs.highJump})
 character:AddSlider({text = 'Jump Power', textpos = 2, min = 50, max = 500, value = 100})
 
 character:AddDivider()
-character:AddToggle({text = 'Inf Jump', callback = funcs.infJump}):AddBind({flag = 'air jump bind', callback = function() bind('infJump') end})
-character:AddToggle({text = 'No Clip', callback = funcs.noClip}):AddBind({flag = 'noclip bind', callback = function() bind('noClip') end})
-character:AddToggle({text = 'Auto Sprint', callback = funcs.autoSprint}):AddBind({flag = 'auto spring bind', callback = function() bind('autoSprint') end})
-character:AddToggle({text = 'God Mode', callback = funcs.godMode}):AddBind({flag = 'godmode bind', callback = function() bind('godMode') end})
---character:AddToggle({text = 'Invis', callback = funcs.invis}):AddBind({flag = 'invis bind', callback = function() bind('invis') end})
-character:AddToggle({text = 'Anti Ragdoll', callback = funcs.antiRagdoll}):AddBind({flag = 'anti ragdoll bind', callback = function() bind('antiRagdoll') end})
+character:AddToggle({text = 'Inf Jump', callback = funcs.infJump})
+character:AddToggle({text = 'No Clip', callback = funcs.noClip})
+character:AddToggle({text = 'Auto Sprint', callback = funcs.autoSprint})
+character:AddToggle({text = 'God Mode', callback = funcs.godMode})
+--character:AddToggle({text = 'Invis', callback = funcs.invis})
+character:AddToggle({text = 'Anti Ragdoll', callback = funcs.antiRagdoll})
 
-extras:AddToggle({text = 'Equip All Tools', callback = funcs.equipAllTools}):AddBind({flag = 'equip all tools bind', callback = function() bind('equipAllTools') end})
+extras:AddToggle({text = 'Equip All Tools', callback = funcs.equipAllTools})
 extras:AddToggle({text = 'Instant Interact', callback = funcs.instantPP})
 extras:AddToggle({text = 'Drop Unnecessary Tools', callback = funcs.dropBadTools})
 extras:AddToggle({text = 'Kill Say', callback = funcs.killSay})
@@ -1467,24 +1485,33 @@ gunMods:AddToggle({text = 'Bullet Visualizer', callback = function(t) funcs.modi
 gunMods:AddToggle({text = 'Sniper Scope', callback = function(t) funcs.modifyFunc('SniperEnabled', t, t) end})
 
 gunMods:AddDivider()
-gunMods:AddToggle({text = 'Instant Reload', callback = function(t) funcs.modifyFunc('ReloadTime', 0, t) end})
-gunMods:AddToggle({text = 'Infinite Ammo', callback = function(t) funcs.modifyFunc('AmmoCost', 0, t) end})
-gunMods:AddToggle({text = 'No Spread', callback = function(t) funcs.modifyFunc('Spread', 0, t) end})
-gunMods:AddToggle({text = 'High Fire Rate', callback = function(t) funcs.modifyFunc('FireRate', 0.001, t) end})
-gunMods:AddToggle({text = 'No Camera Recoil', callback = function(t) funcs.modifyFunc('CameraRecoilingEnabled', t, t) end})
-gunMods:AddToggle({text = 'No Gun Recoil', callback = function(t) funcs.modifyFunc('Recoil', 0, t) end})
-gunMods:AddToggle({text = 'Shotgun Bullets', callback = function(t) funcs.modifyFunc('ShotgunEnabled', t, t) end})
-gunMods:AddToggle({text = 'Explosive Bullets', callback = function(t) funcs.modifyFunc('ExplosiveEnabled', t, t) end})
-gunMods:AddToggle({text = 'No Bullet Shells', callback = function(t) funcs.modifyFunc('BulletShellEnabled', not t, t) end})
-gunMods:AddToggle({text = 'Always Automatic', callback = function(t) funcs.modifyFunc('Auto', t, t) end})
-gunMods:AddToggle({text = 'Infinite Bullet Range', callback = function(t) funcs.modifyFunc('Range', 9e9, t); funcs.modifyFunc('ZeroDamageDistance', 9e9, t); funcs.modifyFunc('FullDamageDistance', 9e9, t) end})
+gunMods:AddToggle({text = 'Instant Reload', callback = function(t) if t then funcs.modifyFunc('ReloadTime', 0, t) end end})
+gunMods:AddToggle({text = 'Infinite Ammo', callback = function(t) if t then funcs.modifyFunc('AmmoCost', 0, t) end end})
+gunMods:AddToggle({text = 'No Spread', callback = function(t) if t then funcs.modifyFunc('Spread', 0, t) end end})
+gunMods:AddToggle({text = 'High Fire Rate', callback = function(t) if t then funcs.modifyFunc('FireRate', 0.001, t) end end})
+gunMods:AddToggle({text = 'No Camera Recoil', callback = function(t) if t then funcs.modifyFunc('CameraRecoilingEnabled', t, t) end end})
+gunMods:AddToggle({text = 'No Gun Recoil', callback = function(t) if t then funcs.modifyFunc('Recoil', 0, t) end end})
+gunMods:AddToggle({text = 'Shotgun Bullets', callback = function(t) if t then funcs.modifyFunc('ShotgunEnabled', t, t) end end})
+gunMods:AddToggle({text = 'Explosive Bullets', callback = function(t) if t then funcs.modifyFunc('ExplosiveEnabled', t, t) end end})
+gunMods:AddToggle({text = 'No Bullet Shells', callback = function(t) if t then funcs.modifyFunc('BulletShellEnabled', not t, t) end end})
+gunMods:AddToggle({text = 'Always Automatic', callback = function(t) if t then funcs.modifyFunc('Auto', t, t) end end})
+gunMods:AddToggle({text = 'Infinite Bullet Range', callback = function(t) if t then funcs.modifyFunc('Range', 9e9, t); funcs.modifyFunc('ZeroDamageDistance', 9e9, t); funcs.modifyFunc('FullDamageDistance', 9e9, t) end end})
 
-rage:AddToggle({text = 'Auto Kill', tip = 'hold out a gun for this to work', callback = funcs.killAll}):AddBind({flag = 'kill all bind', callback = function() bind('autoKill') end})
+rage:AddToggle({text = 'Auto Kill', tip = 'hold out a gun for this to work', callback = funcs.killAll})
 rage:AddSlider({text = 'Snap Height', min = 0, max = 10, float = 0.1})
 rage:AddSlider({text = 'Snap Space', min = -10, max = 10, float = 0.1})
 
 --rage:AddDivider()
---rage:AddToggle({text = 'Auto Arrest', callback = funcs.autoArrest}):AddBind({flag = 'arrest all bind', callback = function() bind('autoArrest') end})
+--rage:AddToggle({text = 'Auto Arrest', callback = funcs.autoArrest})
 --rage:AddSlider({text = 'Snap Height', flag = 'ar height', min = 0, max = 10, float = 0.1})
 --rage:AddSlider({text = 'Snap Space', flag = 'ar space', min = -10, max = 10, float = 0.1})
 --rage:AddToggle({text = 'Auto Switch Team'})
+
+library.OnLoad:Connect(function()
+	for i, v in workspace:GetChildren() do
+		if not v:IsA('BasePart') then continue end
+		if v.Name ~= 'Particles' then continue end
+
+		v:Destroy()
+	end
+end)
