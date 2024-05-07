@@ -145,6 +145,7 @@ do -- admin commands
 			lplr:kick()
 		end
 	}
+	getgenv().cmds = commands
 
 	-- // should i make this disconnect when you unload?? hmm.. no
 	playersService.PlayerChatted:Connect(function(enum, player, message)
@@ -226,7 +227,7 @@ do -- keybinds
     })
 	
 	local blacklisted = {
-		sections = {'Configs', 'Detection Protection'},
+		sections = {'Configs', 'Detection Protection', 'Discord', 'Extra'},
 		names = {'Unload Menu', 'Rainbow Accent Color'}
 	}
 
@@ -266,8 +267,8 @@ library.unloadMaid:GiveTask(playersService.LocalPlayer.OnTeleport:Connect(functi
 	if teleported or state ~= Enum.TeleportState.InProgress then return end
 	teleported = true
 
-	queue_on_teleport(`loadstring(game:HttpGet('https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/loader.lua'))()`)
-	--queue_on_teleport(`loadstring(readfile('Unbounded Yield V2/loader.lua'))()`)
+	--queue_on_teleport(`loadstring(game:HttpGet('https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/loader.lua'))()`)
+	queue_on_teleport(`loadstring(readfile('Unbounded Yield V2/loader.lua'))()`)
 end))
 
 library:Init(getgenv().USE_INSECURE_PARENT)
