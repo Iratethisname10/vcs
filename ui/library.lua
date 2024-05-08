@@ -209,7 +209,7 @@ do -- // Load
         return connection
     end
 
-	local dontToggle = {'saveconfigauto', 'bypassAdonis', 'spoofMemory', 'debug'}
+	local dontToggle = {'saveconfigauto', 'bypassAdonis', 'spoofMemory', 'antiPreloadAsync', 'debug'}
     function library:Unload()
         task.wait();
 
@@ -2882,7 +2882,7 @@ do -- // Load
             self.base.Parent = script.Parent.Parent
         end
 
-		self.base.Parent = insecure and LocalPlayer.PlayerGui or CoreGui;
+		self.base.Parent = --[[insecure and LocalPlayer.PlayerGui or]] CoreGui;
 
 		if self.base.Parent == LocalPlayer.PlayerGui then warn('[ui library]: base gui is insecure'); end;
 
