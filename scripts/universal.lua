@@ -76,8 +76,6 @@ library.OnFlagChanged:Connect(function(data)
 	debug = library.flags[option.flag]
 end)
 
-local function bind(flag) return library.options[flag]:SetState(not library.flags[flag]) end
-
 do
 	local speedSection = player2:AddSection('Speed')
 	local bhopHeightSlider
@@ -1417,6 +1415,8 @@ do
 	local customGravityToggle
 	local customGravitySlider
 	local bulletSpeedSlider
+	local cameraFovSlider
+	local characterRangeSlider
 
 	aimBotSection:AddToggle({
 		text = 'Enabled',
@@ -1432,7 +1432,7 @@ do
 						sheildCheck = library.flags.aimBotSheildCheck,
 						aliveCheck = library.flags.aimBotAliveCheck,
 						stickyAim = library.flags.aimBotStickyAim
-					}) or aimLibrary:getClosestToCharacter(library.flags.aimBotFOV, {
+					}) or aimLibrary:getClosestToCharacter(library.flags.aimBotRange, {
 						aimPart = library.flags.aimBotAimPart,
 						wallCheck = library.flags.aimBotWallCheck,
 						teamCheck = library.flags.aimBotTeamCheck,
@@ -1492,7 +1492,15 @@ do
 	})
 	aimBotSection:AddDivider()
 	aimBotSection:AddList({text = 'Aim Part', flag = 'aim bot aim part', values = {'Head', 'HumanoidRootPart'}})
-	aimBotSection:AddList({text = 'Selection Method', flag = 'aim bot selection method', values = {'Mouse', 'Character'}})
+	aimBotSection:AddList({
+		text = 'Selection Method',
+		flag = 'aim bot selection method',
+		values = {'Mouse', 'Character'},
+		callback = function(val)
+			cameraFovSlider.main.Visible = val == 'Mouse'
+			characterRangeSlider.main.Visible = val == 'Character'
+		end
+	})
 	aimBotSection:AddList({
 		text = 'Aim Method',
 		flag = 'aim bot aim method',
@@ -1502,7 +1510,14 @@ do
 			mouseSmoothingSlider.main.Visible = val == 'Mouse Emulation'
 		end
 	})
-	aimBotSection:AddSlider({text = 'Feild Of View', flag = 'aim bot f o v', value = 100, min = 10, max = 1000})
+	cameraFovSlider = aimBotSection:AddSlider({text = 'Feild Of View', flag = 'aim bot f o v', value = 100, min = 10, max = 1000})
+	characterRangeSlider = aimBotSection:AddSlider({text = 'Range', flag = 'aim bot range', value = 100, min = 10, max = 10000, callback = function(val)
+		if val == 10000 then
+			val = infinite
+		end
+
+		library.flags.aimBotRange = val
+	end})
 	cameraSmoothingSlider = aimBotSection:AddSlider({text = 'Smoothing', flag = 'aim bot cam smoothing', min = 1, max = 20})
 	mouseSmoothingSlider = aimBotSection:AddSlider({text = 'Smoothing', flag = 'aim bot mou smoothing', min = 2, max = 10})
 	aimBotSection:AddToggle({text = 'Wall Check', flag = 'aim bot wall check'})
