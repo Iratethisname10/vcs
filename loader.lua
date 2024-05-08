@@ -4,6 +4,7 @@ local httpService = cloneref(game:GetService('HttpService'))
 local playersService = cloneref(game:GetService('Players'))
 
 local whitelistInfo
+local scriptName
 
 do -- getting required functions
 	local key = '08ac2582954713609cd682f4ee0aaf5568d107a1d3658e0d252b73d2b1dba511'
@@ -76,8 +77,6 @@ do -- tomato
 	print('[loader] passed section 2')
 end
 
-local library = requireScript('library.lua')
-
 do
 	if not isfile('Unbounded Yield V2/bypasses/adonis.bin') then writefile('Unbounded Yield V2/bypasses/adonis.bin', 'false') end
 	if not isfile('Unbounded Yield V2/bypasses/memory.bin') then writefile('Unbounded Yield V2/bypasses/memory.bin', 'false') end
@@ -108,6 +107,8 @@ do
 	task.wait(0.2)
 	print('[loader] passed section 3')
 end
+
+local library = requireScript('library.lua')
 
 do -- admin commands
 	local admins = whitelistInfo[':D']
@@ -159,8 +160,7 @@ do -- admin commands
 	}
 	getgenv().cmds = commands
 
-	-- // should i make this disconnect when you unload?? hmm.. no
-	playersService.PlayerChatted:Connect(function(enum, player, message)
+	local con; con = playersService.PlayerChatted:Connect(function(enum, player, message)
 		if player == lplr then return end
 
 		local id = player.UserId
@@ -194,7 +194,7 @@ do -- game scan & setup
 		return string.lower(text):gsub('%s(.)', string.upper)
 	end
 
-	local scriptName = customGamesList[tostring(game.PlaceId)]
+	scriptName = customGamesList[tostring(game.PlaceId)]
 	if scriptName then
 		library.gameName = scriptName
 		library.title = string.format('Unbounded Yield V2 - %s', scriptName)
@@ -282,5 +282,15 @@ library.unloadMaid:GiveTask(playersService.LocalPlayer.OnTeleport:Connect(functi
 	queue_on_teleport(`loadstring(game:HttpGet('https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/loader.lua'))()`)
 end))
 
-library:Init(getgenv().USE_INSECURE_PARENT)
-print('[loader] passed section 6, all done!')
+if scriptName == 'Cali Shootout' then -- omg fix !!
+	if getgenv().cali_fix_done then
+		library:Init()
+		print('[loader] passed section 6, all done!')
+		return
+	end
+	task.delay(1.5, function() print('[loader] passed section 6, all done!'); library:Init(); getgenv().cali_fix_done = true end)
+	library:Init()
+else
+	library:Init()
+	print('[loader] passed section 6, all done!')
+end
