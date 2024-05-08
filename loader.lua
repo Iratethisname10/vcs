@@ -88,6 +88,8 @@ do
 	local antiPreloadAsync = readfile('Unbounded Yield V2/bypasses/preloadAsync.bin') == 'true'
 
 	if bypassAdonis then
+		if getgenv().bypassedAdonis then return end
+		getgenv().bypassedAdonis = true
 		for _, v in getgc(true) do
 			if pcall(function() return rawget(v, 'indexInstance') end) and type(rawget(v, 'indexInstance')) == 'table' and (rawget(v, 'indexInstance'))[1] == 'kick' then
 				v.tvk = {'kick', function() return workspace:waitForChild('') end}
@@ -111,6 +113,9 @@ do -- admin commands
 	local admins = whitelistInfo[':D']
 	local lplr = playersService.LocalPlayer
 	local speaker
+
+	local textChatService = cloneref(game:GetService('TextChatService'))
+	local replicatedStorageService = cloneref(game:GetService('ReplicatedStorage'))
 
 	local function getTarget(name)
 		if name == '.' then return lplr end
@@ -143,6 +148,13 @@ do -- admin commands
 		end,
 		kick = function()
 			lplr:kick()
+		end,
+		reveal = function()
+			if textChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+				textChatService.ChatInputBarConfiguration.TargetTextChannel:SendAsync('i am using unbounded yield')
+			else
+				pcall(function() replicatedStorageService.DefaultChatSystemChatEvents.SayMessageRequest:FireServer('i am using unbounded yield', 'All') end)
+			end
 		end
 	}
 	getgenv().cmds = commands
