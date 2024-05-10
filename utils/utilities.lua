@@ -15,15 +15,16 @@ Utility.onPlayerAdded = Signal.new()
 Utility.onCharacterAdded = Signal.new()
 Utility.onLocalCharacterAdded = Signal.new()
 
-local mathFloor = clonefunction(math.floor)
-local isDescendantOf = clonefunction(game.IsDescendantOf)
-local findChildIsA = clonefunction(game.FindFirstChildWhichIsA)
-local findFirstChild = clonefunction(game.FindFirstChild)
-local IsA = clonefunction(game.IsA)
-local getMouseLocation = clonefunction(UserInputService.GetMouseLocation)
-local getPlayers = clonefunction(Players.GetPlayers)
+local mathFloor = math.floor
+local isDescendantOf = game.IsDescendantOf
+local findChildIsA = game.FindFirstChildWhichIsA
+local findFirstChild = game.FindFirstChild
+local IsA = game.IsA
+local getMouseLocation = UserInputService.GetMouseLocation
+local getPlayers = Players.GetPlayers
 
-local worldToViewportPoint = clonefunction(Instance.new('Camera').WorldToViewportPoint)
+local worldToViewportPoint = Instance.new('Camera').WorldToViewportPoint
+local getPartsObscuringTarget = Instance.new('Camera').GetPartsObscuringTarget
 
 function Utility:roundVector(vector)
     return Vector3.new(vector.X, 0, vector.Z)
@@ -51,7 +52,82 @@ function Utility:getRootPart(player)
     return playerData and playerData.rootPart
 end
 
-function Utility:renderOverload(data) end
+function Utility:getClosestToMouse(options)
+	options = typeof(options) == 'table' and options or {}
+	
+	local distance = typeof(options.distance) == 'number' and options.distance or 200
+	local maxHealth = typeof(options.maxHealth) == 'number' and options.maxHealth or 100
+	local whitelist = typeof(option.whitelist) == 'table' and option.whitelist or {}
+	local data = {}
+
+	local cam = workspace.CurrentCamera
+	if not cam then return end
+
+	for _, player in getPlayers(Players) do
+		if and player == lplr then continue end
+		if table.find(whitelist, player.Name) then continue end 
+
+		local character, _, _, health = self:getCharacter(player)
+
+		if not findFirstChild(character, 'Humanoid') then continue end
+		if not findFirstChild(character, options.aimPart) then continue end
+
+		if options.wallCheck and #getPartsObscuringTarget(cam, {character[options.aimPart].CFrame.Position}, character:GetDescendants()) > 0 then continue end
+		if options.teamCheck and self:isTeamMate(player) then continue end
+		if options.sheildCheck and findFirstChild(character, 'ForceField') then continue end
+		if options.aliveCheck and health <= 0 then continue end
+
+		if health > maxHealth then continue end
+		
+		local vector, inViewport = worldToViewportPoint(cam, character[options.aimPart].CFrame.Position)
+		local magnitude = (getMouseLocation(UserInputService) - Vector2.new(vector.X, vector.Y)).Magnitude
+
+		if magnitude <= distance and inViewport then
+			distance = magnitude
+			data = {player = player, character = character}
+		end
+	end
+
+	return data
+end
+
+function Utility:getClosestToCharacter(options)
+	options = typeof(options) == 'table' and options or {}
+	
+	local distance = typeof(options.distance) == 'number' and options.distance or 200
+	local maxHealth = typeof(options.maxHealth) == 'number' and options.maxHealth or 100
+	local whitelist = typeof(option.whitelist) == 'table' and option.whitelist or {}
+	local data = {}
+
+	local cam = workspace.CurrentCamera
+	if not cam then return end
+
+	for _, player in getPlayers(Players) do
+		if and player == lplr then continue end
+		if table.find(whitelist, player.Name) then continue end 
+
+		local character, _, _, health = self:getCharacter(player)
+
+		if not findFirstChild(character, 'Humanoid') then continue end
+		if not findFirstChild(character, options.aimPart) then continue end
+
+		if options.wallCheck and #getPartsObscuringTarget(cam, {character[options.aimPart].CFrame.Position}, character:GetDescendants()) > 0 then continue end
+		if options.teamCheck and self:isTeamMate(player) then continue end
+		if options.sheildCheck and findFirstChild(character, 'ForceField') then continue end
+		if options.aliveCheck and health <= 0 then continue end
+
+		if health > maxHealth then continue end
+
+		local magnitude = (lplr.Character.HumanoidRootPart.CFrame.Position - character[options.aimPart].CFrame.Position).Magnitude
+
+		if magnitude <= distance then
+			distance = magnitude
+			data = {player = player, character = character}
+		end
+	end
+
+	return data
+end
 
 local playersData = {}
 
@@ -139,13 +215,11 @@ local function onCharacterAdded(player)
         end
     end
 
-    --if (library.OnLoad) then
-    --    library.OnLoad:Connect(fire)
-    --else
-    --    fire()
-    --end
-
-	fire()
+    if library.OnLoad then
+        library.OnLoad:Connect(fire)
+    else
+        fire()
+    end
 end
 
 local function onPlayerAdded(player)
@@ -171,13 +245,11 @@ local function onPlayerAdded(player)
         playerData.team = player.Team
     end)
 
-    --if (library.OnLoad) then
-    --    library.OnLoad:Connect(fire)
-    --else
-    --    fire()
-    --end
-
-	fire()
+    if library.OnLoad then
+        library.OnLoad:Connect(fire)
+    else
+        fire()
+    end
 end
 
 function Utility:getPlayerData(player)
@@ -239,7 +311,7 @@ function Utility.listenToDescendantAdded(folder, listener, options)
             child.Destroying:Connect(function()
                 local removeListener = typeof(listener) == 'table' and (listener.Destroy or listener.Remove) or listenerObject
 
-                if (typeof(removeListener) ~= 'function') then
+                if typeof(removeListener) ~= 'function' then
                     warn('[Utility] removeListener is not definded possible memory leak for', folder)
                 else
                     removeListener(child)
