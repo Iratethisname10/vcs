@@ -7,7 +7,7 @@
 
 local Signal = {}
 Signal.__index = Signal
-Signal.ClassName = "Signal"
+Signal.ClassName = 'Signal'
 
 --- Constructs a new signal.
 -- @constructor Signal.new()
@@ -15,7 +15,7 @@ Signal.ClassName = "Signal"
 function Signal.new()
 	local self = setmetatable({}, Signal)
 
-	self._bindableEvent = Instance.new("BindableEvent")
+	self._bindableEvent = Instance.new('BindableEvent')
 	self._argData = nil
 	self._argCount = nil -- Prevent edge case of :Fire("A", nil) --> "A" instead of "A", nil
 
@@ -32,7 +32,7 @@ end;
 -- @treturn nil
 function Signal:Fire(...)
 	self._argData = {...}
-	self._argCount = select("#", ...)
+	self._argCount = select('#', ...)
 	self._bindableEvent:Fire()
 	self._argData = nil
 	self._argCount = nil
@@ -42,10 +42,10 @@ end
 -- @tparam function handler Function handler called with arguments passed when `:Fire(...)` is called
 -- @treturn Connection Connection object that can be disconnected
 function Signal:Connect(handler)
-	if not self._bindableEvent then return error("Signal has been destroyed"); end --Fixes an error while respawning with the UI injected
+	if not self._bindableEvent then return error('Signal has been destroyed'); end --Fixes an error while respawning with the UI injected
 
-	if not (type(handler) == "function") then
-		error(("connect(%s)"):format(typeof(handler)), 2)
+	if not type(handler) == 'function' then
+		error(('connect(%s)'):format(typeof(handler)), 2)
 	end
 
 	return self._bindableEvent.Event:Connect(function()
@@ -57,7 +57,7 @@ end
 -- @treturn ... Variable arguments from connection
 function Signal:Wait()
 	self._bindableEvent.Event:Wait()
-	assert(self._argData, "Missing arg data, likely due to :TweenSize/Position corrupting threadrefs.")
+	assert(self._argData, 'Missing arg data, likely due to :TweenSize/Position corrupting threadrefs.')
 	return unpack(self._argData, 1, self._argCount)
 end
 
