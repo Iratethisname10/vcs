@@ -1200,211 +1200,6 @@ do
 	})
 end
 
---[[
-do
-	local silentAimSection = combat2:AddSection('Silent Aim')
-	local isHooked = false
-	local blacklistedScripts = {'ControlScript', 'ControlModule'}
-	local circleOutline
-	local circle
-
-	local actualCallingMethods = {
-		['FindPartOnRay'] = 'FindPartOnRayWithIgnoreList',
-		['FindPartOnRayWithIgnoreList'] = 'FindPartOnRayWithIgnoreList',
-		['FindPartOnRayWithWhitelist'] = 'FindPartOnRayWithIgnoreList',
-		['Raycast'] = 'Raycast',
-		['ScreenPointToRay'] = 'ScreenPointToRay',
-		['ViewportPointToRay'] = 'ScreenPointToRay'
-	}
-
-	local silentAimFuncs = {
-		FindPartOnRayWithIgnoreList = function(args)
-			local targetpart = mathFloor(randomNew().NextNumber(randomNew(), 0, 1) * 100) <= library.flags.silentAimHeadshotChance and 'Head' or 'HumanoidRootPart'
-			if mathFloor(randomNew().NextNumber(randomNew(), 0, 1) * 100) > library.flags.silentAimHitChance then return end
-
-			local origin = args[1].Origin
-			local player = library.flags.silentAimSelectionMethod == 'Mouse' and util:getClosestToMouse(library.flags.silentAimFOV, {
-				aimPart = targetpart,
-				wallCheck = library.flags.silentAimWallCheck,
-				teamCheck = library.flags.silentAimTeamCheck,
-				sheildCheck = library.flags.silentAimSheildCheck,
-				aliveCheck = library.flags.silentAimAliveCheck
-			}) or util:getClosestToCharacter(library.flags.silentAimFOV, {
-				aimPart = targetpart,
-				wallCheck = library.flags.silentAimWallCheck,
-				teamCheck = library.flags.silentAimTeamCheck,
-				sheildCheck = library.flags.silentAimSheildCheck,
-				aliveCheck = library.flags.silentAimAliveCheck
-			})
-			targetpart = player and player.character[targetpart]
-			local direction = cframeLookAt(origin, targetPart.CFrame.Position)
-
-			args[1] = Ray.new(origin, direction.lookVector * args[1].Direction.Magnitude)
-			return
-		end,
-		Raycast = function(args)
-			local targetpart = mathFloor(randomNew().NextNumber(randomNew(), 0, 1) * 100) <= library.flags.silentAimHeadshotChance and 'Head' or 'HumanoidRootPart'
-			if mathFloor(randomNew().NextNumber(randomNew(), 0, 1) * 100) > library.flags.silentAimHitChance then return end
-
-			local origin = args[1]
-			local player; player = library.flags.silentAimSelectionMethod == 'Mouse' and util:getClosestToMouse(library.flags.silentAimFOV, {
-				aimPart = targetpart,
-				wallCheck = library.flags.silentAimWallCheck,
-				teamCheck = library.flags.silentAimTeamCheck,
-				sheildCheck = library.flags.silentAimSheildCheck,
-				aliveCheck = library.flags.silentAimAliveCheck
-			}) or util:getClosestToCharacter(library.flags.silentAimFOV, {
-				aimPart = targetpart,
-				wallCheck = library.flags.silentAimWallCheck,
-				teamCheck = library.flags.silentAimTeamCheck,
-				sheildCheck = library.flags.silentAimSheildCheck,
-				aliveCheck = library.flags.silentAimAliveCheck
-			})
-			targetpart = player and player.character:FindFirstChild(targetpart)
-			if not targetpart then return end
-
-			local direction = CFrame.lookAt(origin, targetpart.Position)
-			
-			args[2] = direction.lookVector * args[2].Magnitude
-			return
-		end,
-		ScreenPointToRay = function(args)
-			local targetpart = mathFloor(randomNew().NextNumber(randomNew(), 0, 1) * 100) <= library.flags.silentAimHeadshotChance and 'Head' or 'HumanoidRootPart'
-			if mathFloor(randomNew().NextNumber(randomNew(), 0, 1) * 100) > library.flags.silentAimHitChance then return end
-			
-			local origin = gameCam.CFrame.Position
-			local player = library.flags.silentAimSelectionMethod == 'Mouse' and util:getClosestToMouse(library.flags.silentAimFOV, {
-				aimPart = targetpart,
-				wallCheck = library.flags.silentAimWallCheck,
-				teamCheck = library.flags.silentAimTeamCheck,
-				sheildCheck = library.flags.silentAimSheildCheck,
-				aliveCheck = library.flags.silentAimAliveCheck
-			}) or util:getClosestToCharacter(library.flags.silentAimFOV, {
-				aimPart = targetpart,
-				wallCheck = library.flags.silentAimWallCheck,
-				teamCheck = library.flags.silentAimTeamCheck,
-				sheildCheck = library.flags.silentAimSheildCheck,
-				aliveCheck = library.flags.silentAimAliveCheck
-			})
-			targetpart = player and player.character[targetpart]
-			local direction = cframeLookAt(origin, targetPart.Position)
-
-			return {
-				Ray.new(direction.Position + (args[3] and direction.lookVector * args[3] or vector3Zero), direction.lookVector)
-			}
-		end
-	}
-	
-	silentAimSection:AddToggle({
-		text = 'Enabled',
-		flag = 'silent aim',
-		risky = true,
-		callback = function(t)
-			if t then
-				if isHooked then return end
-				isHooked = true
-				local oldNamecall; oldNamecall = hookmetamethod(game, '__namecall', function(self, ...)
-					if not library.flags.silentAim then return oldNamecall(self, ...) end
-					if not util:getPlayerData().alive then return oldNamecall(self, ...) end
-
-					if checkcaller() then return oldNamecall(self, ...) end
-
-					if getnamecallmethod() ~= library.flags.silentAimMethod then return oldNamecall(self, ...) end
-					if find(blacklistedScripts, tostring(getcallingscript())) then return oldNamecall(self, ...) end
-
-					local args = {...}
-					print(actualCallingMethods[library.flags.silentAimMethod])
-					local hookedResult = silentAimFuncs[library.flags.silentAimMethod](args)
-					if hookedResult then return unpack(hookedResult) end
-
-					return oldNamecall(self, unpack(args))
-				end)
-				maid.silentAimCircle = runService.RenderStepped:Connect(function()
-					if not circle or not circleOutline then return end
-					circle.Color = library.flags.silentAimCircleColor
-					circle.Filled = library.flags.silentAimCircleFilled
-					circle.NumSides = library.flags.silentAimCircleSides
-					circle.Transparency = library.flags.silentAimCircleTransparency
-					circle.Radius = library.flags.silentAimFOV
-					circle.Thickness = library.flags.silentAimCircleThickness
-					circle.Visible = library.flags.silentAim and library.flags.silentAimSelectionMethod == 'Mouse'
-					circle.ZIndex = 2
-					circle.Position = userInputService:GetMouseLocation()
-
-					circleOutline.Color = Color3.fromRGB(0, 0, 0)
-					circleOutline.Filled = false
-					circleOutline.NumSides = library.flags.silentAimCircleSides
-					circleOutline.Transparency = library.flags.silentAimCircleTransparency
-					circleOutline.Radius = circle.Radius
-					circleOutline.Thickness = circle.Thickness + 1.5
-					circleOutline.Visible = circle.Visible
-					circleOutline.ZIndex = circle.ZIndex - 1
-					circleOutline.Position = circle.Position
-				end)
-			else
-				restorefunction(getrawmetatable(game).__namecall)
-				isHooked = false
-				maid.silentAimCircle = nil
-
-				if circle then circle.Visible = false end
-				if circleOutline then circleOutline.Visible = false end
-			end
-		end
-	})
-	silentAimSection:AddDivider()
-	silentAimSection:AddList({
-		text = 'Method',
-		flag = 'silent aim method',
-		values = {'Raycast', 'FindPartOnRayWithIgnoreList', 'FindPartOnRayWithWhitelist', 'FindPartOnRay', 'ScreenPointToRay', 'ViewportPointToRay'}
-	})
-	silentAimSection:AddList({text = 'Selection Method', flag = 'silent aim selection method', values = {'Mouse', 'Character'}})
-	silentAimSection:AddSlider({text = 'Hit Chance', textpos = 2, flag = 'silent aim hit chance', value = 70, min = 0, max = 100, float = 0.1})
-	silentAimSection:AddSlider({text = 'Headshot Chance', textpos = 2, flag = 'silent aim headshot chance', value = 30, min = 0, max = 100, float = 0.1})
-	silentAimSection:AddSlider({text = 'Feild Of View', flag = 'silent aim f o v', value = 100, min = 10, max = 1000})
-	silentAimSection:AddToggle({text = 'Wall Check', flag = 'silent aim wall check'})
-	silentAimSection:AddToggle({text = 'Team Check', flag = 'silent aim team check', state = true})
-	silentAimSection:AddToggle({text = 'Sheild Check', flag = 'silent aim sheild check', state = true})
-	silentAimSection:AddToggle({text = 'Alive Check', flag = 'silent aim alive check', state = true})
-
-	silentAimSection:AddDivider()
-	silentAimSection:AddToggle({
-		text = 'Fov Circle',
-		flag = 'silent aim fov circle',
-		callback = function(t)
-			if t then
-				circle = circle or drawingNew('Circle')
-				circle.Color = library.flags.silentAimCircleColor
-				circle.Filled = library.flags.silentAimCircleFilled
-				circle.NumSides = library.flags.silentAimCircleSides
-				circle.Transparency = library.flags.silentAimCircleTransparency
-				circle.Radius = library.flags.silentAimFOV
-				circle.Thickness = library.flags.silentAimCircleThickness
-				circle.Visible = library.flags.silentAim and library.flags.silentAimSelectionMethod == 'Mouse'
-				circle.ZIndex = 2
-				circle.Position = userInputService:GetMouseLocation()
-
-				circleOutline = circleOutline or drawingNew('Circle')
-				circleOutline.Color = Color3.fromRGB(0, 0, 0)
-				circleOutline.Filled = false
-				circleOutline.NumSides = library.flags.silentAimCircleSides
-				circleOutline.Transparency = library.flags.silentAimCircleTransparency
-				circleOutline.Radius = circle.Radius
-				circleOutline.Thickness = circle.Thickness + 1.5
-				circleOutline.Visible = circle.Visible
-				circleOutline.ZIndex = circle.ZIndex - 1
-				circleOutline.Position = circle.Position
-			else
-				if circle then circle:Destroy(); circle = nil end
-				if circleOutline then circleOutline:Destroy(); circleOutline = nil end
-			end
-		end
-	}):AddColor({flag = 'silent aim circle color'})
-	silentAimSection:AddSlider({text = 'Circle Sides', textpos = 2, min = 3, max = 50, value = 16, flag = 'silent aim circle sides'})
-	silentAimSection:AddSlider({text = 'Circle Thickness', textpos = 2, min = 1, max = 5, float = 0.01, value = 2, flag = 'silent aim circle thickness'})
-	silentAimSection:AddSlider({text = 'Circle Transparency', textpos = 2, min = 0, max = 1, float = 0.01, value = 0.7, flag = 'silent aim circle transparency'})
-	silentAimSection:AddToggle({text = 'Circle Filled', flag = 'silent aim circle filled'})
-end
-]]
 do
 	local aimBotSection = combat1:AddSection('Aim Bot')
 	local circleOutline
@@ -1424,14 +1219,16 @@ do
 			if t then
 				maid.aimBot = runService.RenderStepped:Connect(function()
 					if not util:getPlayerData().alive then return end
-					local target = library.flags.aimBotSelectionMethod == 'Mouse' and util:getClosestToMouse(library.flags.aimBotFOV, {
+					local target = library.flags.aimBotSelectionMethod == 'Mouse' and util:getClosestToMouse({
+						distance = library.flags.aimBotFOV,
 						aimPart = library.flags.aimBotAimPart,
 						wallCheck = library.flags.aimBotWallCheck,
 						teamCheck = library.flags.aimBotTeamCheck,
 						sheildCheck = library.flags.aimBotSheildCheck,
 						aliveCheck = library.flags.aimBotAliveCheck,
 						stickyAim = library.flags.aimBotStickyAim
-					}) or util:getClosestToCharacter(library.flags.aimBotRange, {
+					}) or util:getClosestToCharacter({
+						distance = library.flags.aimBotRange,
 						aimPart = library.flags.aimBotAimPart,
 						wallCheck = library.flags.aimBotWallCheck,
 						teamCheck = library.flags.aimBotTeamCheck,
@@ -1900,7 +1697,7 @@ do
 				repeat
 					if not util:getPlayerData().alive then return end
 
-					target = util:getClosestToCharacter(library.flags.targetStrafeRange, {aimPart = 'Head'})
+					target = util:getClosestToCharacter({distance = library.flags.targetStrafeRange, aimPart = 'Head'})
 					targetStrafeFuncs[library.flags.targetStrafeMode]()
 					
 					if target then
