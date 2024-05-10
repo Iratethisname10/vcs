@@ -168,13 +168,14 @@ do -- combat funcs
 		maid.aimBot = runService.RenderStepped:Connect(function()
 			if not util:getPlayerData().alive then return end
 
-			target = util:getClosestToMouse(library.flags.aimBotFOV, {
+			target = util:getClosestToMouse({
+				distance = library.flags.aimBotFOV,
 				aimPart = library.flags.aimBotPart,
 				wallCheck = false,
 				teamCheck = false,
 				sheildCheck = false,
 				aliveCheck = false,
-				maxHealth = library.flags.aimBotIgnore and 200 or infinite
+				maxHealth = library.flags.aimBotIgnore and 200 or math.huge
 			})
 
 			if circle and circleOutline then 
