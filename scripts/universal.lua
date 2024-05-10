@@ -66,7 +66,6 @@ local util = requireScript('utils.lua')
 local notif = requireScript('notifs.lua')
 
 local espLibrary = requireScript('utils/helpers/esp.lua')
-local aimLibrary = requireScript('utils/helpers/aim.lua')
 
 local debug = library.flags.debugMode
 library.OnFlagChanged:Connect(function(data)
@@ -1224,13 +1223,13 @@ do
 			if mathFloor(randomNew().NextNumber(randomNew(), 0, 1) * 100) > library.flags.silentAimHitChance then return end
 
 			local origin = args[1].Origin
-			local player = library.flags.silentAimSelectionMethod == 'Mouse' and aimLibrary:getClosestToMouse(library.flags.silentAimFOV, {
+			local player = library.flags.silentAimSelectionMethod == 'Mouse' and util:getClosestToMouse(library.flags.silentAimFOV, {
 				aimPart = targetpart,
 				wallCheck = library.flags.silentAimWallCheck,
 				teamCheck = library.flags.silentAimTeamCheck,
 				sheildCheck = library.flags.silentAimSheildCheck,
 				aliveCheck = library.flags.silentAimAliveCheck
-			}) or aimLibrary:getClosestToCharacter(library.flags.silentAimFOV, {
+			}) or util:getClosestToCharacter(library.flags.silentAimFOV, {
 				aimPart = targetpart,
 				wallCheck = library.flags.silentAimWallCheck,
 				teamCheck = library.flags.silentAimTeamCheck,
@@ -1248,13 +1247,13 @@ do
 			if mathFloor(randomNew().NextNumber(randomNew(), 0, 1) * 100) > library.flags.silentAimHitChance then return end
 
 			local origin = args[1]
-			local player; player = library.flags.silentAimSelectionMethod == 'Mouse' and aimLibrary:getClosestToMouse(library.flags.silentAimFOV, {
+			local player; player = library.flags.silentAimSelectionMethod == 'Mouse' and util:getClosestToMouse(library.flags.silentAimFOV, {
 				aimPart = targetpart,
 				wallCheck = library.flags.silentAimWallCheck,
 				teamCheck = library.flags.silentAimTeamCheck,
 				sheildCheck = library.flags.silentAimSheildCheck,
 				aliveCheck = library.flags.silentAimAliveCheck
-			}) or aimLibrary:getClosestToCharacter(library.flags.silentAimFOV, {
+			}) or util:getClosestToCharacter(library.flags.silentAimFOV, {
 				aimPart = targetpart,
 				wallCheck = library.flags.silentAimWallCheck,
 				teamCheck = library.flags.silentAimTeamCheck,
@@ -1274,13 +1273,13 @@ do
 			if mathFloor(randomNew().NextNumber(randomNew(), 0, 1) * 100) > library.flags.silentAimHitChance then return end
 			
 			local origin = gameCam.CFrame.Position
-			local player = library.flags.silentAimSelectionMethod == 'Mouse' and aimLibrary:getClosestToMouse(library.flags.silentAimFOV, {
+			local player = library.flags.silentAimSelectionMethod == 'Mouse' and util:getClosestToMouse(library.flags.silentAimFOV, {
 				aimPart = targetpart,
 				wallCheck = library.flags.silentAimWallCheck,
 				teamCheck = library.flags.silentAimTeamCheck,
 				sheildCheck = library.flags.silentAimSheildCheck,
 				aliveCheck = library.flags.silentAimAliveCheck
-			}) or aimLibrary:getClosestToCharacter(library.flags.silentAimFOV, {
+			}) or util:getClosestToCharacter(library.flags.silentAimFOV, {
 				aimPart = targetpart,
 				wallCheck = library.flags.silentAimWallCheck,
 				teamCheck = library.flags.silentAimTeamCheck,
@@ -1425,14 +1424,14 @@ do
 			if t then
 				maid.aimBot = runService.RenderStepped:Connect(function()
 					if not util:getPlayerData().alive then return end
-					local target = library.flags.aimBotSelectionMethod == 'Mouse' and aimLibrary:getClosestToMouse(library.flags.aimBotFOV, {
+					local target = library.flags.aimBotSelectionMethod == 'Mouse' and util:getClosestToMouse(library.flags.aimBotFOV, {
 						aimPart = library.flags.aimBotAimPart,
 						wallCheck = library.flags.aimBotWallCheck,
 						teamCheck = library.flags.aimBotTeamCheck,
 						sheildCheck = library.flags.aimBotSheildCheck,
 						aliveCheck = library.flags.aimBotAliveCheck,
 						stickyAim = library.flags.aimBotStickyAim
-					}) or aimLibrary:getClosestToCharacter(library.flags.aimBotRange, {
+					}) or util:getClosestToCharacter(library.flags.aimBotRange, {
 						aimPart = library.flags.aimBotAimPart,
 						wallCheck = library.flags.aimBotWallCheck,
 						teamCheck = library.flags.aimBotTeamCheck,
@@ -1901,7 +1900,7 @@ do
 				repeat
 					if not util:getPlayerData().alive then return end
 
-					target = aimLibrary:getClosestToCharacter(library.flags.targetStrafeRange, {aimPart = 'Head'})
+					target = util:getClosestToCharacter(library.flags.targetStrafeRange, {aimPart = 'Head'})
 					targetStrafeFuncs[library.flags.targetStrafeMode]()
 					
 					if target then
