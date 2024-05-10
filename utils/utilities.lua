@@ -64,7 +64,7 @@ function Utility:getClosestToMouse(options)
 	if not cam then return end
 
 	for _, player in getPlayers(Players) do
-		if and player == lplr then continue end
+		if and player == LocalPlayer then continue end
 		if table.find(whitelist, player.Name) then continue end 
 
 		local character, _, _, health = self:getCharacter(player)
@@ -102,8 +102,11 @@ function Utility:getClosestToCharacter(options)
 	local cam = workspace.CurrentCamera
 	if not cam then return end
 
+	local myCharacter = self:getCharacter(LocalPlayer)
+	if not myCharacter then return end
+
 	for _, player in getPlayers(Players) do
-		if and player == lplr then continue end
+		if and player == LocalPlayer then continue end
 		if table.find(whitelist, player.Name) then continue end 
 
 		local character, _, _, health = self:getCharacter(player)
@@ -118,7 +121,7 @@ function Utility:getClosestToCharacter(options)
 
 		if health > maxHealth then continue end
 
-		local magnitude = (lplr.Character.HumanoidRootPart.CFrame.Position - character[options.aimPart].CFrame.Position).Magnitude
+		local magnitude = (myCharacter.HumanoidRootPart.CFrame.Position - character[options.aimPart].CFrame.Position).Magnitude
 
 		if magnitude <= distance then
 			distance = magnitude
