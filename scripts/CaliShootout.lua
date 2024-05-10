@@ -65,7 +65,6 @@ local util = requireScript('utils.lua')
 local notif = requireScript('notifs.lua')
 
 local espLibrary = requireScript('utils/helpers/esp.lua')
-local aimLibrary = requireScript('utils/helpers/aim.lua')
 
 local debug = library.flags.debugMode
 library.OnFlagChanged:Connect(function(data)
@@ -169,7 +168,7 @@ do -- combat funcs
 		maid.aimBot = runService.RenderStepped:Connect(function()
 			if not util:getPlayerData().alive then return end
 
-			target = aimLibrary:getClosestToMouse(library.flags.aimBotFOV, {
+			target = util:getClosestToMouse(library.flags.aimBotFOV, {
 				aimPart = library.flags.aimBotPart,
 				wallCheck = false,
 				teamCheck = false,
@@ -1143,7 +1142,7 @@ do -- rage funcs
 		maid.killAll = runService.Heartbeat:Connect(function()
 			if not util:getPlayerData().alive then return end
 
-			local target = aimLibrary:getClosestToCharacter(infinite, {maxHealth = 200, aimPart = 'HumanoidRootPart'})
+			local target = util:getClosestToCharacter(infinite, {maxHealth = 200, aimPart = 'HumanoidRootPart'})
 			target = target and target.character
 			if not target then lplr.CameraMaxZoomDistance = 30 return end
 
@@ -1174,7 +1173,7 @@ do -- rage funcs
 	--	maid.autoArrest = runService.Heartbeat:Connect(function()
 	--		if not util:getPlayerData().alive then return end
 
-	--		local target = aimLibrary:getClosestToCharacter(infinite, {maxHealth = 200, aimPart = 'HumanoidRootPart'})
+	--		local target = util:getClosestToCharacter(infinite, {maxHealth = 200, aimPart = 'HumanoidRootPart'})
 	--		target = target and target.character
 
 	--		
