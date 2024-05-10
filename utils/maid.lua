@@ -1,4 +1,4 @@
-local Signal = loadstring(game:HttpGet('https://raw.githubusercontent.com/Iratethisname10/Code/main/aztup-ui/signal.lua'))();
+local Signal = requireScript('signal.lua')
 
 local Maid = {}
 Maid.ClassName = 'Maid'
@@ -53,15 +53,15 @@ function Maid:__newindex(index, newTask)
 		if type(oldTask) == 'function' then
 			oldTask()
 		elseif typeof(oldTask) == 'RBXScriptConnection' then
-			oldTask:Disconnect();
+			oldTask:Disconnect()
 		elseif typeof(oldTask) == 'table' then
-			table.clear(taskData);
-		elseif (Signal.isSignal(oldTask)) then
-			oldTask:Destroy();
-		elseif (typeof(oldTask) == 'thread') then
-			task.cancel(oldTask);
+			table.clear(taskData)
+		elseif Signal.isSignal(oldTask) then
+			oldTask:Destroy()
+		elseif typeof(oldTask) == 'thread' then
+			task.cancel(oldTask)
 		elseif oldTask.Destroy then
-			oldTask:Destroy();
+			oldTask:Destroy()
 		end
 	end
 end
@@ -71,7 +71,7 @@ end
 -- @treturn number taskId
 function Maid:GiveTask(task)
 	if not task then
-		error("Task cannot be false or nil", 2)
+		error('Task cannot be false or nil', 2)
 	end
 
 	local taskId = #self._tasks+1
@@ -101,12 +101,12 @@ function Maid:DoCleaning()
 			taskData()
 		elseif typeof(taskData) == 'RBXScriptConnection' then
 			taskData:Disconnect()
-		elseif (Signal.isSignal(taskData)) then
-			taskData:Destroy();
+		elseif Signal.isSignal(taskData) then
+			taskData:Destroy()
 		elseif typeof(taskData) == 'table' then
-			table.clear(taskData);
-		elseif (typeof(taskData) == 'thread') then
-			task.cancel(taskData);
+			table.clear(taskData)
+		elseif typeof(taskData) == 'thread' then
+			task.cancel(taskData)
 		elseif taskData.Destroy then
 			taskData:Destroy()
 		end
@@ -118,4 +118,4 @@ end
 -- @function Destroy
 Maid.Destroy = Maid.DoCleaning
 
-return Maid;
+return Maid
