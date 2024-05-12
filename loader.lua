@@ -6,6 +6,11 @@ local playersService = cloneref(game:GetService('Players'))
 local whitelistInfo
 local scriptName
 
+local scriptLoadAt = tick()
+
+local supportedExecutors = {}
+local teleported = false
+
 do -- getting required functions
 	local key = '08ac2582954713609cd682f4ee0aaf5568d107a1d3658e0d252b73d2b1dba511'
 	local gottenKey
@@ -77,6 +82,8 @@ do -- tomato
 	print('[loader] passed section 2')
 end
 
+local library = requireScript('library.lua')
+
 do
 	if not isfile('Unbounded Yield V2/bypasses/adonis.bin') then writefile('Unbounded Yield V2/bypasses/adonis.bin', 'false') end
 	if not isfile('Unbounded Yield V2/bypasses/memory.bin') then writefile('Unbounded Yield V2/bypasses/memory.bin', 'false') end
@@ -90,8 +97,11 @@ do
 
 	end
 
-	if spoofMemory then
-		
+	if spoofMemory and memorystats then
+		local tags = {'Internal', 'HttpCache', 'Instances', 'Signals', 'LuaHeap', 'Script', 'Physics Collision', 'PhysicsParts', 'GraphicsSolidModels', 'GraphicsMeshparts', 'GraphicsParticles', 'GraphicsParts', 'GraphicsSpatialHash', 'GraphicsTerrain', 'GraphicsTexture', 'GraphicsTextureCharacter', 'Sounds', 'StreamingSounds', 'TerrainVoxels', 'Gui', 'Animation', 'Navigation', 'GemoetryCSG'}
+
+		for _, tag in tags do memorystats.cache(tag) end
+		task.delay(20, function() for _, tag in tags do memorystats.restore(tag) end end)
 	end
 
 	if antiPreloadAsync then
@@ -101,8 +111,6 @@ do
 	task.wait(0.2)
 	print('[loader] passed section 3')
 end
-
-local library = requireScript('library.lua')
 
 do -- admin commands
 	local admins = whitelistInfo[':D']
@@ -259,7 +267,7 @@ do -- keybinds
                     end
                 })
             end)
-        end;
+        end
 	end
 
 	for _, v in objects do
@@ -268,7 +276,6 @@ do -- keybinds
     end
 end
 
-local teleported = false
 library.unloadMaid:GiveTask(playersService.LocalPlayer.OnTeleport:Connect(function(state)
 	if teleported or state ~= Enum.TeleportState.InProgress then return end
 	teleported = true
@@ -286,5 +293,5 @@ if scriptName == 'Cali Shootout' then -- omg fix !!
 	library:Init()
 else
 	library:Init()
-	print('[loader] passed section 6, all done!')
+	print(string.format('[loader] passed section 6, all done! (%s)', tick() - scriptLoadAt))
 end
