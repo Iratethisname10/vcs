@@ -1,4 +1,5 @@
 local getgenv = getgenv or function() return _G end
+local gethwid = gethwid or function() return '1' end
 
 local shortenedScripts = {
 	['library.lua'] = 'ui/library.lua',
