@@ -56,7 +56,7 @@ local terrain = workspace.Terrain
 
 local gameCam = workspace.CurrentCamera
 library.unloadMaid:GiveTask(workspace:GetPropertyChangedSignal('CurrentCamera'):Connect(function()
-	gameCamera = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera')
+	gameCam = workspace.CurrentCamera or workspace:FindFirstChildWhichIsA('Camera')
 end))
 
 local mouse = lplr:GetMouse()
