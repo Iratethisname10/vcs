@@ -1,4 +1,5 @@
 local cloneref = cloneref or function(instance) return instance end
+local gethwid = gethwid or function() return '1' end
 
 local httpService = cloneref(game:GetService('HttpService'))
 local playersService = cloneref(game:GetService('Players'))
