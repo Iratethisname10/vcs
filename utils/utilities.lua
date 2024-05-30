@@ -64,7 +64,7 @@ function Utility:getClosestToMouse(options)
 	if not cam then return end
 
 	for _, player in getPlayers(Players) do
-		if and player == LocalPlayer then continue end
+		if player == LocalPlayer then continue end
 		if table.find(whitelist, player.Name) then continue end 
 
 		local character, _, _, health = self:getCharacter(player)
@@ -106,7 +106,7 @@ function Utility:getClosestToCharacter(options)
 	if not myCharacter then return end
 
 	for _, player in getPlayers(Players) do
-		if and player == LocalPlayer then continue end
+		if player == LocalPlayer then continue end
 		if table.find(whitelist, player.Name) then continue end 
 
 		local character, _, _, health = self:getCharacter(player)
