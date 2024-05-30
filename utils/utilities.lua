@@ -57,7 +57,7 @@ function Utility:getClosestToMouse(options)
 	
 	local distance = typeof(options.distance) == 'number' and options.distance or 200
 	local maxHealth = typeof(options.maxHealth) == 'number' and options.maxHealth or 100
-	local whitelist = typeof(option.whitelist) == 'table' and option.whitelist or {}
+	local whitelist = typeof(options.whitelist) == 'table' and options.whitelist or {}
 	local data = {}
 
 	local cam = workspace.CurrentCamera
@@ -96,7 +96,7 @@ function Utility:getClosestToCharacter(options)
 	
 	local distance = typeof(options.distance) == 'number' and options.distance or 200
 	local maxHealth = typeof(options.maxHealth) == 'number' and options.maxHealth or 100
-	local whitelist = typeof(option.whitelist) == 'table' and option.whitelist or {}
+	local whitelist = typeof(options.whitelist) == 'table' and options.whitelist or {}
 	local data = {}
 
 	local cam = workspace.CurrentCamera
