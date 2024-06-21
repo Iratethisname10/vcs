@@ -4,7 +4,6 @@ local gethwid = gethwid or function() return '1' end
 local httpService = cloneref(game:GetService('HttpService'))
 local playersService = cloneref(game:GetService('Players'))
 
-local whitelistInfo
 local scriptName
 
 local scriptLoadAt = tick()
@@ -12,49 +11,9 @@ local scriptLoadAt = tick()
 local supportedExecutors = {}
 local teleported = false
 
-do -- getting required functions
-	local key = '08ac2582954713609cd682f4ee0aaf5568d107a1d3658e0d252b73d2b1dba511'
-	local gottenKey
-
-	local doingRequest
-	local requestData
-
-	task.delay(15, function()
-		if gottenKey then return end
-		gottenKey = 'failed 1' 
-	end)
-
-	print('[loader] starting')
-
-	repeat
-		if typeof(game) ~= 'Instance' then gottenKey = 'failed 2' break end
-		if gottenKey then break end
-		if doingRequest then return end
-
-		doingRequest = true
-		local suc, res = pcall(function()
-			return game:HttpGet('https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/requires.lua')
-		end)
-
-		if not suc or table.find({'404: Not Found', '400: Invalid Request'}, res) then gottenKey = 'failed 3' break end
-
-		requestData = loadstring(res)()
-
-		doingRequest = false
-
-		task.wait()
-	until requestData
-
-	gottenKey = requestData.key
-	print(string.format('[loader] needed key: %s', key))
-	print(string.format('[loader] gotten key: %s', gottenKey))
-
-	if gottenKey ~= key then return warn('[loader] script could not load: invalid key') end
-	if string.find(gottenKey, 'failed') then return warn(string.format('[loader] script could not load: %s', gottenKey)) end
-
-	whitelistInfo = httpService:JSONDecode(requireScript('whitelist.json'))
-	print('[loader] passed section 1')
-end
+loadstring(game:HttpGet('https://raw.githubusercontent.com/Iratethisname10/UnboundedYieldV2/main/requires.lua'))()
+local whitelistInfo = httpService:JSONDecode(requireScript('whitelist.json'))
+print('[loader] passed section 1')
 
 repeat task.wait() until game:IsLoaded()
 print('[loader] game loaded')
