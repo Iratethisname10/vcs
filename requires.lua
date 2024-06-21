@@ -80,5 +80,3 @@ getgenv().crash = function()
 end
 
 getgenv().hash = hash
-
-return {key = '08ac2582954713609cd682f4ee0aaf5568d107a1d3658e0d252b73d2b1dba511'}
