@@ -30,9 +30,9 @@ getgenv().getJSON = getgenv().getJSON or function(scriptName: string)
 
 	local formatted = string.gsub(scriptName, '%s+', '');
 	local extension = string.match(formatted, '.+%w+%p(%w+)');
-	assert(extension == 'json', 'must be a json file');
 
 	if (shortened[formatted]) then formatted = shortened[formatted]; end;
+	assert(extension == 'json', '[requires] must be a json file');
 
 	local cached = getgenv().vcsJSONCache[formatted];
 	if (cached) then
@@ -76,9 +76,9 @@ getgenv().getScript = getgenv().getScript or function(scriptName: string)
 
 	local formatted = string.gsub(scriptName, '%s+', '');
 	local extension = string.match(formatted, '.+%w+%p(%w+)');
-	assert(extension == 'lua' or extension == 'luau', 'must be a lua or luau file');
 
 	if (shortened[formatted]) then formatted = shortened[formatted]; end;
+	assert(extension == 'lua' or extension == 'luau', '[requires] must be a lua or luau file');
 
 	local cached = getgenv().vcsCache[formatted];
 	if (cached) then
