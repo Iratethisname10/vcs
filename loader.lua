@@ -32,6 +32,7 @@ local success = xpcall(function()
 
 		if (not success or table.find(responseErrors, result)) then
 			recivedData = 'failed: error recived when getting require file';
+			break;
 		end;
 
 		recivedData = loadstring(result);
