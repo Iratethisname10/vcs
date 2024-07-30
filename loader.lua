@@ -3,7 +3,7 @@ local loaderRanAt = tick();
 local name = '[loader]';
 
 local scriptVersion = '1';
-local recivedData;
+local recivedData, reason;
 
 local function printf(text: string, ...) return print(name, string.format(text, ...)); end;
 local function warnf(text: string, ...) return warn(name, string.format(text, ...)); end;
@@ -19,32 +19,20 @@ local success = xpcall(function()
 		recivedData = 'failed: exceeded load time';
 	end);
 
-	repeat
-		if (recivedData) then break; end;
-
-		local success, result = pcall(function()
-			if (isfile(localFilePath) and not getgenv().dontUseFile) then
-				return readfile(localFilePath);
-			end;
-
-			return game:HttpGet(githubPath);
-		end);
-
-		if (not success or table.find(responseErrors, result)) then
-			recivedData = 'failed: error recived when getting require file';
-			break;
+	local suc, res = pcall(function()
+		if (isfile(localFilePath) and not getgenv().dontUseFile) then
+			return readfile(localFilePath);
 		end;
 
-		recivedData = loadstring(result);
+		return game:HttpGet(githubPath);
+	end);
 
-		task.wait();
-	until recivedData;
-
-	if (typeof(recivedData) == 'string' and recivedData:sub(1, 6) == 'failed') then
-		return warnf('something went wrong: %s', recivedData:gsub('failed: ', ''));
+	if (not suc or table.find(responseErrors, res)) then
+		warnf('something went wrong while trying to get the require file: %s', res);
+		return;
 	end;
 
-	recivedData = recivedData();
+	recivedData = loadstring(res, 'require script')();
 	if (recivedData.version ~= scriptVersion) then return
 		warnf('current version and recived version is not the same');
 	end;
