@@ -18,8 +18,6 @@ local responseErrors = {'404: Not Found', '400: Invalid Request'};
 local function printf(text: string, ...) return print(name, string.format(text, ...)); end;
 local function warnf(text: string, ...) return warn(name, string.format(text, ...)); end;
 
-local function getgenv() return _G; end;
-
 getgenv().vcsCache = getgenv().vcsCache or {};
 getgenv().vcsJSONCache = getgenv().vcsJSONCache or {};
 
