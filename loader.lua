@@ -3,7 +3,6 @@ local loaderRanAt = tick();
 local name = '[loader]';
 
 local scriptVersion = '1';
-local inProgress = false;
 local recivedData;
 
 local function printf(text: string, ...) return print(name, string.format(text, ...)); end;
@@ -22,9 +21,6 @@ local success = xpcall(function()
 
 	repeat
 		if (recivedData) then break; end;
-		if (inProgress) then return; end;
-
-		inProgress = true;
 
 		local success, result = pcall(function()
 			if (isfile(localFilePath) and not getgenv().dontUseFile) then
@@ -40,7 +36,6 @@ local success = xpcall(function()
 
 		recivedData = loadstring(result);
 
-		inProgress = false;
 		task.wait();
 	until recivedData;
 
