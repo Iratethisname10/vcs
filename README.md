@@ -1,4 +1,4 @@
-## vcs / vocat's script
+# vcs / vocat's script
 
 finally rewriting after a year lol
 
